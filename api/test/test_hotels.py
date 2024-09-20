@@ -16,7 +16,21 @@ def hotel_url(hotel_id: int | None = None):
 
 def test_list_of_hotels():
     assert client.get(hotel_url()).status_code == HTTPStatus.OK
-    assert client.get(hotel_url()).json() == hotels
+    assert client.get(hotel_url()).json() == hotels[0: 3]
+
+
+def test_hotels_pagination():
+    test_data = ((2, 3), (3, 3), (1, 4), (2, 4), (1, 5), (2, 5), (3, 5))
+    for cur_test_data in test_data:
+        end_point = cur_test_data[0] * cur_test_data[1]
+        start_point = end_point - cur_test_data[1]
+        if end_point > len(hotels):
+            end_point = len(hotels)
+        response = client.get(
+            f'{hotel_url()}/?page='
+            f'{cur_test_data[0]}&per_page={cur_test_data[1]}')
+        assert response.status_code == HTTPStatus.OK
+        assert response.json() == hotels[start_point: end_point]
 
 
 def test_get_hotel_by_id():
@@ -52,7 +66,7 @@ def test_update_hotel():
 
 
 def test_partial_update_hotel():
-    response = client.put(
+    response = client.patch(
         '/hotels/2/', json={'name': 'new_name_2'}
     )
     assert response.json()['name'] == 'new_name_2'

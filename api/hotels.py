@@ -71,8 +71,6 @@ async def get_hotels(
     start_point = end_point - per_page
     if end_point > len(hotels):
         end_point = len(hotels)
-    if start_point > len(hotels):
-        return list()
     hotels_list_response = list()
     for hotel in hotels:
         if id and hotel['id'] != id:
