@@ -1,5 +1,6 @@
 from fastapi import Query, APIRouter
 from api.schemas.schemas import Hotel, HotelPATCH
+from api.dependencies import PaginationDep
 
 
 hotels_router = APIRouter(prefix='/hotels')
@@ -52,6 +53,7 @@ hotels = [
 
 @hotels_router.get('/')
 async def get_hotels(
+    *,
     id: int | None = Query(
         default=None,
         description='индентификатор'
@@ -64,8 +66,7 @@ async def get_hotels(
         default=None,
         description='Название отеля'
     ),
-    page: int = 1,
-    per_page: int = 3
+    dependencies: PaginationDep
 ):
 
     hotels_list_response = list()
@@ -77,8 +78,8 @@ async def get_hotels(
         if title and hotel['title'] != title:
             continue
         hotels_list_response.append(hotel)
-    end_point = page * per_page
-    start_point = end_point - per_page
+    end_point = dependencies.page * dependencies.per_page
+    start_point = end_point - dependencies.per_page
     return hotels_list_response[start_point: end_point]
 
 
