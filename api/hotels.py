@@ -1,4 +1,6 @@
-from fastapi import Body, Query, APIRouter
+from fastapi import Query, APIRouter
+from api.schemas.schemas import Hotel, HotelPATCH
+
 
 hotels_router = APIRouter(prefix='/hotels')
 
@@ -81,63 +83,48 @@ async def delete_hotels(hotel_id: int):
         for hotel in hotels:
             if hotel['id'] == hotel_id:
                 hotels.remove(hotel)
-                return hotels
+                return f'Отель с id {hotel_id} успешно удален.'
     except IndexError:
         return f'Отель с id {hotel_id} не найден.'
 
 
 @hotels_router.post('/')
 async def post_hotel(
-    hotel_name: str = Body(embed=True),
-    hotel_title: None | str = Body(default=None, embed=True)
+    hotel: Hotel,
 ):
-    if not hotel_title:
-        hotel_title = 'Не указан'
+    if hotel.title is None:
+        hotel.title = 'Не указан'
     hotels.append({
         'id': hotels[-1]['id'] + 1,
-        'name': hotel_name,
-        'city': hotel_title
+        'name': hotel.name,
+        'title': hotel.title
     })
-    return hotels
+    return hotels[-1]
 
 
 @hotels_router.put('/{hotel_id}')
 async def update_hotel(
     hotel_id: int,
-    hotel_name: str = Body(
-        description='Оригинальное название отеля',
-        embed=True
-    ),
-    hotel_title: str = Body(
-        description='Название отеля',
-        embed=True
-    )
+    hotel_data: Hotel
 ):
     for hotel in hotels:
         if hotel['id'] == hotel_id:
-            hotel['name'] = hotel_name
-            hotel['title'] = hotel_title
-    return {'status': 'OK'}
+            hotel['name'] = hotel_data.name
+            hotel['title'] = hotel_data.title
+            return hotel
+    return {'status': 'NOT FOUND'}
 
 
 @hotels_router.patch('/{hotel_id}')
 async def update_hote(
     hotel_id: int,
-    hotel_name: str | None = Body(
-        default=None,
-        description='Оригинальное название отеля',
-        embed=True
-    ),
-    hotel_title: str | None = Body(
-        default=None,
-        description='Название отеля',
-        embed=True
-    )
+    hotel_data: HotelPATCH
 ):
     for hotel in hotels:
         if hotel['id'] == hotel_id:
-            if hotel_name:
-                hotel['name'] = hotel_name
-            if hotel_title:
-                hotel['title'] = hotel_title
+            if hotel_data.name is not None:
+                hotel['name'] = hotel_data.name
+            if hotel_data.title is not None:
+                hotel['title'] = hotel_data.title
             return hotel
+    return {'status': 'NOT FOUND'}
