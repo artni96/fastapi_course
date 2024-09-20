@@ -67,10 +67,7 @@ async def get_hotels(
     page: int = 1,
     per_page: int = 3
 ):
-    end_point = page * per_page
-    start_point = end_point - per_page
-    if end_point > len(hotels):
-        end_point = len(hotels)
+
     hotels_list_response = list()
     for hotel in hotels:
         if id and hotel['id'] != id:
@@ -80,6 +77,8 @@ async def get_hotels(
         if title and hotel['title'] != title:
             continue
         hotels_list_response.append(hotel)
+    end_point = page * per_page
+    start_point = end_point - per_page
     return hotels_list_response[start_point: end_point]
 
 

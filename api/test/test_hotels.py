@@ -24,8 +24,6 @@ def test_hotels_pagination():
     for cur_test_data in test_data:
         end_point = cur_test_data[0] * cur_test_data[1]
         start_point = end_point - cur_test_data[1]
-        if end_point > len(hotels):
-            end_point = len(hotels)
         response = client.get(
             f'{hotel_url()}/?page='
             f'{cur_test_data[0]}&per_page={cur_test_data[1]}')
