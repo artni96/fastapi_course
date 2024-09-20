@@ -63,8 +63,16 @@ async def get_hotels(
     title: str | None = Query(
         default=None,
         description='Название отеля'
-    )
+    ),
+    page: int = 1,
+    per_page: int = 3
 ):
+    end_point = page * per_page
+    start_point = end_point - per_page
+    if end_point > len(hotels):
+        end_point = len(hotels)
+    if start_point > len(hotels):
+        return list()
     hotels_list_response = list()
     for hotel in hotels:
         if id and hotel['id'] != id:
@@ -74,7 +82,7 @@ async def get_hotels(
         if title and hotel['title'] != title:
             continue
         hotels_list_response.append(hotel)
-    return hotels_list_response
+    return hotels_list_response[start_point: end_point]
 
 
 @hotels_router.delete('/{hotel_id}')
