@@ -1,6 +1,6 @@
 from fastapi import Query, APIRouter
-from api.schemas.schemas import Hotel, HotelPATCH
-from api.dependencies import PaginationDep
+from src.schemas.hotels import Hotel, HotelPATCH
+from src.api.dependencies import PaginationDep
 
 
 hotels_router = APIRouter(prefix='/hotels')

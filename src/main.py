@@ -1,8 +1,15 @@
-from fastapi import FastAPI
+import sys
+from pathlib import Path
+
 import uvicorn
+from fastapi import FastAPI
 from fastapi.openapi.docs import (get_redoc_html, get_swagger_ui_html,
                                   get_swagger_ui_oauth2_redirect_html)
-from api.hotels import hotels_router
+
+sys.path.append(str(Path(__file__).parent.parent))
+
+from src.api.hotels import hotels_router  # noqa
+
 
 app = FastAPI(docs_url=None, redoc_url=None)
 app.include_router(hotels_router)
