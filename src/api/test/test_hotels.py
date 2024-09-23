@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from http import HTTPStatus
 
-from main import app
+from src.main import app
 from api.hotels import hotels
 from api.test.fixtures import hotel_data_to_post
 
