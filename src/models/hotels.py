@@ -1,11 +1,10 @@
-from src.db import BaseORM
+from src.db import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String
 
 
-class HotelsModel(BaseORM):
+class HotelsModel(Base):
     __tablename__ = 'hotels'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     location: Mapped[str]

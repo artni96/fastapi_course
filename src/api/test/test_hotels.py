@@ -1,9 +1,13 @@
 from fastapi.testclient import TestClient
 from http import HTTPStatus
+from pathlib import Path
+import sys
 
-from src.main import app
-from api.hotels import hotels
-from api.test.fixtures import hotel_data_to_post
+sys.path.append(str(Path(__file__).parent.parent.parent.parent))
+
+from src.main import app # noqa
+from src.api.hotels import hotels # noqa
+from src.api.test.fixtures import hotel_data_to_post # noqa
 
 client = TestClient(app)
 
