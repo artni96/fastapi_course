@@ -15,7 +15,6 @@ class Settings(BaseSettings):
             f'{self.DB_USER_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/'
             f'{self.DB_NAME}'
         )
-        print(url)
         return url
 
     model_config = SettingsConfigDict(env_file=".env")
