@@ -58,13 +58,13 @@ hotels = [
 @hotels_router.get('/')
 async def get_hotels(
     *,
-    id: int | None = Query(
-        default=None,
-        description='индентификатор'
-    ),
     title: str | None = Query(
         default=None,
         description='Название отеля'
+    ),
+    location: str | None = Query(
+        default=None,
+        description='Расположение'
     ),
     pagination: PaginationDep
 ):
@@ -73,10 +73,10 @@ async def get_hotels(
     offset = (pagination.page - 1) * limit
     async with async_session_maker() as session:
         query = select(HotelsModel)
-        if id:
-            query = query.filter_by(id=id)
         if title:
-            query = query.filter_by(title=title)
+            query = query.filter(HotelsModel.title.icontains(title))
+        if location:
+            query = query.filter(HotelsModel.location.icontains(location))
         query = (
             query
             .offset(offset)
