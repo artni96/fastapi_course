@@ -1,6 +1,10 @@
-from fastapi import Query, APIRouter
+from fastapi import Body, Query, APIRouter
+from models.hotels import HotelsModel
 from src.schemas.hotels import Hotel, HotelPATCH
 from src.api.dependencies import PaginationDep
+from src.db import async_session_maker
+from sqlalchemy import insert, select
+from src.db import engine
 
 
 hotels_router = APIRouter(prefix='/hotels')
@@ -66,21 +70,15 @@ async def get_hotels(
         default=None,
         description='Название отеля'
     ),
-    dependencies: PaginationDep
+    pagination: PaginationDep
 ):
-
-    hotels_list_response = list()
-    for hotel in hotels:
-        if id and hotel['id'] != id:
-            continue
-        if name and hotel['name'] != name:
-            continue
-        if title and hotel['title'] != title:
-            continue
-        hotels_list_response.append(hotel)
-    end_point = dependencies.page * dependencies.per_page
-    start_point = end_point - dependencies.per_page
-    return hotels_list_response[start_point: end_point]
+    async with async_session_maker() as session:
+        query = select(HotelsModel)
+        result = await session.execute(query)
+        return result.scalars().all()
+    # end_point = pagination.page * pagination.per_page
+    # start_point = end_point - pagination.per_page
+    # return hotels_list_response[start_point: end_point]
 
 
 @hotels_router.delete('/{hotel_id}')
@@ -96,16 +94,19 @@ async def delete_hotels(hotel_id: int):
 
 @hotels_router.post('/')
 async def post_hotel(
-    hotel: Hotel,
+    hotel: Hotel = Body(
+        openapi_examples=Hotel.Config.schema_extra['examples']
+    ),
 ):
-    if hotel.title is None:
-        hotel.title = 'Не указан'
-    hotels.append({
-        'id': hotels[-1]['id'] + 1,
-        'name': hotel.name,
-        'title': hotel.title
-    })
-    return hotels[-1]
+    async with async_session_maker() as session:
+        new_hotel_stmt = insert(HotelsModel).values(**hotel.model_dump())
+        print(new_hotel_stmt.compile(
+            engine,
+            compile_kwargs={"literal_binds": True})
+        )
+        await session.execute(new_hotel_stmt)
+        await session.commit()
+    return f'{hotel.title} успешно добавлен.'
 
 
 @hotels_router.put('/{hotel_id}')
