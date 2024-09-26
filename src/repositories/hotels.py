@@ -1,7 +1,8 @@
-from sqlalchemy import select
+from sqlalchemy import insert, select
+
 from models.hotels import HotelsModel
+from src.db import engine
 from src.repositories.base import BaseRepository
-from src.api.dependencies import PaginationDep
 
 
 class HotelsRepository(BaseRepository):
@@ -26,3 +27,15 @@ class HotelsRepository(BaseRepository):
         )
         result = await self.session.execute(query)
         return result.scalars().all()
+
+    async def add(self, hotel: HotelsModel):
+        new_hotel_stmt = (
+            insert(self.model).values(**hotel.model_dump()).returning(
+                self.model)
+        )
+        print(new_hotel_stmt.compile(
+            engine,
+            compile_kwargs={"literal_binds": True})
+        )
+        result = await self.session.execute(new_hotel_stmt)
+        return result.scalars().one()

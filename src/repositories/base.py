@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from sqlalchemy import insert, select
 
 from src.api.dependencies import PaginationDep
@@ -30,11 +31,7 @@ class BaseRepository:
         result = await self.session.execute(query)
         return result.scalars().one_or_none()
 
-    async def add(self, hotel):
-        new_hotel_stmt = insert(self.model).values(**hotel.model_dump())
-        print(new_hotel_stmt.compile(
-            engine,
-            compile_kwargs={"literal_binds": True})
-        )
-        new_hotel_stmt = await self.session.execute(new_hotel_stmt)
-        return new_hotel_stmt.inserted_primary_key[0]
+    async def add(self, data: BaseModel):
+        new_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
+        result = await self.session.execute(new_data_stmt)
+        return result.scalars().one()
