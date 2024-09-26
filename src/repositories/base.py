@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, delete
 
 from src.api.dependencies import PaginationDep
 from src.db import engine
@@ -32,6 +32,12 @@ class BaseRepository:
         return result.scalars().one_or_none()
 
     async def add(self, data: BaseModel):
-        new_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
+        new_data_stmt = (
+            insert(self.model).values(**data.model_dump()).returning(
+                self.model
+            )
+        )
         result = await self.session.execute(new_data_stmt)
         return result.scalars().one()
+
+

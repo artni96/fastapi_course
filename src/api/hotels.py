@@ -32,15 +32,18 @@ async def get_hotels(
         )
 
 
-# @hotels_router.delete('/{hotel_id}')
-# async def delete_hotels(hotel_id: int):
-#     try:
-#         for hotel in hotels:
-#             if hotel['id'] == hotel_id:
-#                 hotels.remove(hotel)
-#                 return f'Отель с id {hotel_id} успешно удален.'
-#     except IndexError:
-#         return f'Отель с id {hotel_id} не найден.'
+@hotels_router.delete('/')
+async def delete_hotels(
+    hotel_id: int = None,
+    title: str = None,
+    location: str = None
+):
+    async with async_session_maker() as session:
+        obj_to_del = await HotelsRepository(session).remove(
+            id=hotel_id, title=title, location=location
+        )
+        await session.commit()
+        return obj_to_del
 
 
 @hotels_router.post('/')
