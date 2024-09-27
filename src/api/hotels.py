@@ -59,29 +59,21 @@ async def post_hotel(
     return {'status': 'OK', 'data': {new_hotel}}
 
 
-# @hotels_router.put('/{hotel_id}')
-# async def update_hotel(
-#     hotel_id: int,
-#     hotel_data: Hotel
-# ):
-#     for hotel in hotels:
-#         if hotel['id'] == hotel_id:
-#             hotel['name'] = hotel_data.name
-#             hotel['title'] = hotel_data.title
-#             return hotel
-#     return {'status': 'NOT FOUND'}
-
-
-# @hotels_router.patch('/{hotel_id}')
-# async def update_hote(
-#     hotel_id: int,
-#     hotel_data: HotelPATCH
-# ):
-#     for hotel in hotels:
-#         if hotel['id'] == hotel_id:
-#             if hotel_data.name is not None:
-#                 hotel['name'] = hotel_data.name
-#             if hotel_data.title is not None:
-#                 hotel['title'] = hotel_data.title
-#             return hotel
-#     return {'status': 'NOT FOUND'}
+@hotels_router.put('/')
+async def update_hotel(
+    *,
+    hotel_id: int = None,
+    hotel_title: str = None,
+    hotel_location: str = None,
+    hotel_data: Hotel
+):
+    async with async_session_maker() as session:
+        await HotelsRepository(session).change(
+            hotel_id=hotel_id,
+            hotel_title=hotel_title,
+            hotel_location=hotel_location,
+            hotel_data=hotel_data
+        )
+        await session.commit()
+        return {'status': 'OK'}
+    return {'status': 'NOT FOUND'}
