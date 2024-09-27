@@ -32,18 +32,28 @@ async def get_hotels(
         )
 
 
-@hotels_router.delete('/')
-async def delete_hotels(
-    hotel_id: int = None,
-    title: str = None,
-    location: str = None
+@hotels_router.get('/{hotel_id}')
+async def get_hotel(
+    hotel_id: int
 ):
     async with async_session_maker() as session:
-        obj_to_del = await HotelsRepository(session).remove(
-            id=hotel_id, title=title, location=location
+        result = await HotelsRepository(session).get_one_or_none(
+            id=hotel_id
         )
-        await session.commit()
-        return obj_to_del
+        return result if result is not None else {'status': 'NOT FOUND'}
+
+
+@hotels_router.delete('/{hotel_id}')
+async def delete_hotel(
+    hotel_id: int,
+):
+    async with async_session_maker() as session:
+        result = await HotelsRepository(session).remove(
+            id=hotel_id
+        )
+        if result['status'] == 'OK':
+            await session.commit()
+        return result
 
 
 @hotels_router.post('/')
@@ -59,19 +69,14 @@ async def post_hotel(
     return {'status': 'OK', 'data': {new_hotel}}
 
 
-@hotels_router.put('/')
+@hotels_router.put('/{hotel_id}')
 async def update_hotel(
-    *,
-    hotel_id: int = None,
-    hotel_title: str = None,
-    hotel_location: str = None,
+    hotel_id: int,
     hotel_data: Hotel
 ):
     async with async_session_maker() as session:
         result = await HotelsRepository(session).change(
             id=hotel_id,
-            hotel_title=hotel_title,
-            hotel_location=hotel_location,
             data=hotel_data
         )
         if result['status'] == 'OK':
@@ -79,19 +84,15 @@ async def update_hotel(
         return result
 
 
-@hotels_router.patch('/')
+@hotels_router.patch('/{hotel_id}')
 async def update_hotel_partially(
-    *,
-    hotel_id: int = None,
-    hotel_title: str = None,
-    hotel_location: str = None,
+    hotel_id: int,
     hotel_data: HotelPATCH
 ):
     async with async_session_maker() as session:
         result = await HotelsRepository(session).change(
-            hotel_id=hotel_id,
-            hotel_title=hotel_title,
-            hotel_location=hotel_location,
+            id=hotel_id,
+            exclude_unset=True,
             data=hotel_data
         )
         if result['status'] == 'OK':

@@ -40,17 +40,24 @@ class BaseRepository:
         result = await self.session.execute(new_data_stmt)
         return result.scalars().one()
 
-    async def change(self, id, data: BaseModel):
-        query = update(self.model).where(self.model.id == id).values(
-            **data.model_dump()
+    async def change(
+            self,
+            data: BaseModel,
+            exclude_unset: bool = False,
+            **filtered_by
+    ):
+        query = (
+            update(self.model)
+            .filter_by(**filtered_by)
+            .values(**data.model_dump(exclude_unset=exclude_unset))
         )
         result = await self.session.execute(query)
         if result.rowcount == 1:
             return {'status': 'OK'}
         return {'status': 'Unprocessable Entity'}
 
-    async def remove(self, id, *args, **kwargs):
-        query = delete(self.model).where(self.model.id == id)
+    async def remove(self, **filtered_by):
+        query = delete(self.model).filter_by(**filtered_by)
         result = await self.session.execute(query)
         if result.rowcount == 1:
             return {'status': 'OK'}
