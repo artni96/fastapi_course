@@ -1,5 +1,5 @@
 from fastapi import Body, Query, APIRouter
-from src.schemas.hotels import Hotel, HotelPATCH
+from src.schemas.hotels import Hotel, HotelPatch, HotelAddPut
 from src.api.dependencies import PaginationDep
 from src.db import async_session_maker
 
@@ -40,7 +40,7 @@ async def get_hotel(
         result = await HotelsRepository(session).get_one_or_none(
             id=hotel_id
         )
-        return result if result is not None else {'status': 'NOT FOUND'}
+        return result
 
 
 @hotels_router.delete('/{hotel_id}')
@@ -58,21 +58,21 @@ async def delete_hotel(
 
 @hotels_router.post('/')
 async def post_hotel(
-    hotel: Hotel = Body(
+    hotel_data: HotelAddPut = Body(
         openapi_examples=Hotel.Config.schema_extra['examples']
     ),
 ):
     async with async_session_maker() as session:
-        new_hotel = await HotelsRepository(session).add(hotel)
+        new_hotel = await HotelsRepository(session).add(hotel_data)
         await session.commit()
 
-    return {'status': 'OK', 'data': {new_hotel}}
+    return {'status': 'OK', 'data': new_hotel}
 
 
 @hotels_router.put('/{hotel_id}')
 async def update_hotel(
     hotel_id: int,
-    hotel_data: Hotel
+    hotel_data: HotelAddPut
 ):
     async with async_session_maker() as session:
         result = await HotelsRepository(session).change(
@@ -87,7 +87,7 @@ async def update_hotel(
 @hotels_router.patch('/{hotel_id}')
 async def update_hotel_partially(
     hotel_id: int,
-    hotel_data: HotelPATCH
+    hotel_data: HotelPatch
 ):
     async with async_session_maker() as session:
         result = await HotelsRepository(session).change(

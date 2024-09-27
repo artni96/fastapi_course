@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class Hotel(BaseModel):
+class HotelAddPut(BaseModel):
     title: str = Field(
         description='Название отеля'
     )
@@ -40,7 +40,11 @@ class Hotel(BaseModel):
         }
 
 
-class HotelPATCH(BaseModel):
+class Hotel(HotelAddPut):
+    id: int
+
+
+class HotelPatch(BaseModel):
     title: str | None = Field(
         default=None,
         description='Название отеля'

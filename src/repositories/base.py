@@ -2,11 +2,11 @@ from pydantic import BaseModel
 from sqlalchemy import insert, select, delete, update
 
 from src.api.dependencies import PaginationDep
-from src.db import engine
 
 
 class BaseRepository:
     model = None
+    schema: BaseModel = None
 
     def __init__(
             self,
@@ -24,12 +24,20 @@ class BaseRepository:
             .limit(self.limit)
         )
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return [
+            self.schema.model_validate(model_obj, from_attributes=True)
+            for model_obj in result.scalars().all()
+        ]
 
     async def get_one_or_none(self, id):
         query = select(self.model).filter_by(id=id)
         result = await self.session.execute(query)
-        return result.scalars().one_or_none()
+        model_obj = result.scalars().one_or_none()
+        if result is not None:
+            return self.schema.model_validate(
+                model_obj, from_attributes=True
+            )
+        return {'status': 'NOT FOUND'}
 
     async def add(self, data: BaseModel):
         new_data_stmt = (
@@ -38,7 +46,10 @@ class BaseRepository:
             )
         )
         result = await self.session.execute(new_data_stmt)
-        return result.scalars().one()
+        new_model_obj = result.scalars().one()
+        return self.schema.model_validate(
+            new_model_obj,
+            from_attributes=True)
 
     async def change(
             self,

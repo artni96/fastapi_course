@@ -1,12 +1,14 @@
-from sqlalchemy import insert, select, delete, update
+from sqlalchemy import insert, select
 
 from models.hotels import HotelsModel
+from schemas.hotels import Hotel
 from src.db import engine
 from src.repositories.base import BaseRepository
 
 
 class HotelsRepository(BaseRepository):
     model = HotelsModel
+    schema = Hotel
 
     async def filtered_query(self, query, location=None, title=None, id=None):
         if id is not None:
@@ -37,7 +39,10 @@ class HotelsRepository(BaseRepository):
             .limit(limit)
         )
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return [
+            Hotel.model_validate(hotel, from_attributes=True)
+            for hotel in result.scalars().all()
+        ]
 
     async def add(self, hotel: HotelsModel):
         new_hotel_stmt = (
@@ -49,4 +54,7 @@ class HotelsRepository(BaseRepository):
             compile_kwargs={"literal_binds": True})
         )
         result = await self.session.execute(new_hotel_stmt)
-        return result.scalars().one()
+        model_obj = result.scalars().one()
+        return Hotel.model_validate(
+            model_obj, from_attributes=True
+        )
