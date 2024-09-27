@@ -10,7 +10,7 @@ class HotelsRepository(BaseRepository):
 
     async def filtered_query(self, query, location=None, title=None, id=None):
         if id is not None:
-            query = query.filter(self.model.id.icontains(id))
+            query = query.filter_by(id=id)
         if title is not None:
             query = query.filter(self.model.title.icontains(title))
         if location is not None:
@@ -85,6 +85,6 @@ class HotelsRepository(BaseRepository):
             compile_kwargs={"literal_binds": True})
         )
         result = await self.session.execute(query.returning())
-        if result.rowcount > 0:
+        if result.rowcount == 1:
             return {'status': 'OK'}
-        return {'status': 'NOT FOUND'}
+        return {'status': 'Unprocessable Entity'}

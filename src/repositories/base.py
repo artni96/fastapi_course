@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import insert, select, delete
+from sqlalchemy import insert, select, delete, update
 
 from src.api.dependencies import PaginationDep
 from src.db import engine
@@ -40,4 +40,18 @@ class BaseRepository:
         result = await self.session.execute(new_data_stmt)
         return result.scalars().one()
 
+    async def change(self, id, data: BaseModel):
+        query = update(self.model).where(self.model.id == id).values(
+            **data.model_dump()
+        )
+        result = await self.session.execute(query)
+        if result.rowcount == 1:
+            return {'status': 'OK'}
+        return {'status': 'Unprocessable Entity'}
 
+    async def remove(self, id, *args, **kwargs):
+        query = delete(self.model).where(self.model.id == id)
+        result = await self.session.execute(query)
+        if result.rowcount == 1:
+            return {'status': 'OK'}
+        return {'status': 'Unprocessable Entity'}

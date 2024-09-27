@@ -69,12 +69,13 @@ async def update_hotel(
 ):
     async with async_session_maker() as session:
         result = await HotelsRepository(session).change(
-            hotel_id=hotel_id,
+            id=hotel_id,
             hotel_title=hotel_title,
             hotel_location=hotel_location,
             data=hotel_data
         )
-        await session.commit()
+        if result['status'] == 'OK':
+            await session.commit()
         return result
 
 
@@ -93,5 +94,6 @@ async def update_hotel_partially(
             hotel_location=hotel_location,
             data=hotel_data
         )
-        await session.commit()
+        if result['status'] == 'OK':
+            await session.commit()
         return result
