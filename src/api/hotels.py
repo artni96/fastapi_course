@@ -68,15 +68,14 @@ async def update_hotel(
     hotel_data: Hotel
 ):
     async with async_session_maker() as session:
-        await HotelsRepository(session).change(
+        result = await HotelsRepository(session).change(
             hotel_id=hotel_id,
             hotel_title=hotel_title,
             hotel_location=hotel_location,
-            hotel_data=hotel_data
+            data=hotel_data
         )
         await session.commit()
-        return {'status': 'OK'}
-    return {'status': 'NOT FOUND'}
+        return result
 
 
 @hotels_router.patch('/')
@@ -88,12 +87,11 @@ async def update_hotel_partially(
     hotel_data: HotelPATCH
 ):
     async with async_session_maker() as session:
-        await HotelsRepository(session).change(
+        result = await HotelsRepository(session).change(
             hotel_id=hotel_id,
             hotel_title=hotel_title,
             hotel_location=hotel_location,
-            hotel_data=hotel_data
+            data=hotel_data
         )
         await session.commit()
-        return {'status': 'OK'}
-    return {'status': 'NOT FOUND'}
+        return result
