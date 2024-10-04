@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+import re
 
 
 class UserRequestAdd(BaseModel):
@@ -8,6 +9,25 @@ class UserRequestAdd(BaseModel):
     first_name: str | None = Field(default=None, max_length=64)
     last_name: str | None = Field(default=None, max_length=128)
     role: str = Field(default='Пользователь')
+
+    @field_validator('role')
+    def validate_role(cls, value: str):
+        role_list = ('Админ', 'Модератор', 'Пользователь')
+
+        if value.capitalize() not in role_list:
+            raise ValueError(
+                f"Пожалуйста, выберите одну из предложенных ролей: {role_list}"
+            )
+        return value.capitalize()
+
+    @field_validator('email')
+    def validate_email(cls, value: str):
+        email_pattern = r"^\S+@\S+\.\S+$"
+        if not re.fullmatch(email_pattern, value):
+            raise ValueError(
+                'Пожалуйста, укажите валидный email. Например - test@test.test'
+            )
+        return value
 
 
 class UserAdd(BaseModel):

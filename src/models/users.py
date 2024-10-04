@@ -1,13 +1,7 @@
 from src.db import Base
 from sqlalchemy.orm import Mapped, mapped_column, validates
-from sqlalchemy import String, Enum, Column
-import enum
-
-
-class UserRoleEnum(enum.Enum):
-    ADMIN = 'Админ'
-    MODER = 'Модератор'
-    USER = 'Пользователь'
+from sqlalchemy import String
+import re
 
 
 class UsersModel(Base):
@@ -24,5 +18,16 @@ class UsersModel(Base):
         role_list = ('Админ', 'Модератор', 'Пользователь')
 
         if value.lower() not in role_list:
-            return f"Роли на выбор: {role_list}"
+            raise ValueError(
+                f'Пожалуйста, выберите одну из предложенных ролей: {role_list}'
+            )
         return value.capitalize()
+
+    @validates('email')
+    def validate_email(self, key, value: str):
+        email_pattern = r"^\S+@\S+\.\S+$"
+        if not re.fullmatch(email_pattern, value):
+            raise ValueError(
+                'Пожалуйста, укажите валидный email. Например - test@test.test'
+            )
+        return value
