@@ -55,3 +55,8 @@ class User(BaseModel):
     role: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserJwt(BaseModel):
+    email: EmailStr
+    password: str

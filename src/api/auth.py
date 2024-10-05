@@ -1,13 +1,32 @@
-from fastapi import APIRouter
-from src.schemas.users import UserRequestAdd, UserAdd
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from fastapi import APIRouter, HTTPException
+from passlib.context import CryptContext
+from sqlalchemy.exc import IntegrityError
+
+from src.config import settings
 from src.db import async_session_maker
 from src.repositories.users import UsersRepository
-from sqlalchemy.exc import IntegrityError
-from passlib.context import CryptContext
+from src.schemas.users import UserAdd, UserJwt, UserRequestAdd
 
 
 router = APIRouter(prefix='/auth', tags=['Авторизация и аутентификация'],)
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    to_encode.update({'exp': expire})
+    encoded_jwt = jwt.encode(
+        to_encode,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORTIHM
+    )
+    return encoded_jwt
 
 
 @router.post('/register')
@@ -35,3 +54,15 @@ async def create_user(data: UserRequestAdd):
                 return (
                     f'Пользователь с email "{data.email}" уже существует.'
                 )
+
+
+@router.post('/login')
+async def get_jwt(data: UserJwt):
+    async with async_session_maker() as session:
+        requested_user = await UsersRepository(session).get_one_or_none(
+            email=data.email
+        )
+        if requested_user is not None:
+            access_token = create_access_token({'user_id': requested_user.id})
+            return {'access_token': access_token}
+        raise HTTPException(status_code=401, detail='Пользователь не найден')

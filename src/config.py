@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     DB_PORT: int
     DB_USER: str
     DB_USER_PASSWORD: str
+    SECRET_KEY: str
+    ALGORTIHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     @property
     def DB_URL(self):
