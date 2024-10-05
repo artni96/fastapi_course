@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field, ConfigDict, field_validator
 import re
+
+from pydantic import (BaseModel, ConfigDict, Field, field_validator,
+                      model_validator)
 
 
 class UserRequestAdd(BaseModel):
@@ -28,6 +30,20 @@ class UserRequestAdd(BaseModel):
                 'Пожалуйста, укажите валидный email. Например - test@test.test'
             )
         return value
+
+    @model_validator(mode='after')
+    def using_different_languages(cls, values):
+        if values.first_name is not None and values.last_name is not None:
+            full_name = f'{values.first_name} {values.last_name}'
+            if (
+                (re.search('[а-я]', full_name, re.IGNORECASE)) and
+                (re.search('[a-z]', full_name, re.IGNORECASE))
+            ):
+                raise ValueError(
+                    'Пожалуйста, не смешивайте русские и латинские буквы'
+                )
+            return values
+        return values
 
 
 class UserAdd(BaseModel):
