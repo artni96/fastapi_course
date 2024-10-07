@@ -10,7 +10,7 @@ class UsersRepository(BaseRepository):
     model = UsersModel
     schema = User
 
-    async def get_one_or_none(self, email: EmailStr):
+    async def get_user_by_email(self, email: EmailStr):
         query = select(self.model).filter_by(email=email)
         result = await self.session.execute(query)
         model_obj = result.scalars().one_or_none()

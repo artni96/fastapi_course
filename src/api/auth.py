@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, HTTPException, Request, Response
 from sqlalchemy.exc import IntegrityError
 
@@ -6,6 +5,7 @@ from src.db import async_session_maker
 from src.repositories.users import UsersRepository
 from src.schemas.users import UserAdd, UserJwt, UserRequestAdd
 from src.services.auth import AuthService
+from src.api.dependencies import UserIdDep
 
 
 router = APIRouter(prefix='/auth', tags=['Авторизация и аутентификация'],)
@@ -44,7 +44,7 @@ async def get_jwt(
     response: Response
 ):
     async with async_session_maker() as session:
-        requested_user = await UsersRepository(session).get_one_or_none(
+        requested_user = await UsersRepository(session).get_user_by_email(
             email=data.email
         )
         if requested_user is None:
@@ -62,10 +62,7 @@ async def get_jwt(
         return {'access_token': access_token}
 
 
-@router.get('/only_auth')
-async def only_auth(request: Request):
-    try:
-        access_token = request.cookies['access_token']
-        return access_token
-    except KeyError:
-        return
+@router.get('/me')
+async def get_me(user_id: UserIdDep):
+    async with async_session_maker() as session:
+        return await UsersRepository(session).get_one_or_none(id=user_id)
