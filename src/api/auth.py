@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from sqlalchemy.exc import IntegrityError
 
 from src.db import async_session_maker
@@ -60,3 +60,12 @@ async def get_jwt(
         )
         response.set_cookie("access_token", access_token)
         return {'access_token': access_token}
+
+
+@router.get('/only_auth')
+async def only_auth(request: Request):
+    try:
+        access_token = request.cookies['access_token']
+        return access_token
+    except KeyError:
+        return
