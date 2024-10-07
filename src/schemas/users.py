@@ -60,3 +60,7 @@ class User(BaseModel):
 class UserJwt(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserJwtWithHashedPassword(User):
+    hashed_password: str
