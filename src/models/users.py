@@ -1,7 +1,8 @@
 from src.db import Base
 from sqlalchemy.orm import Mapped, mapped_column, validates
-from sqlalchemy import String
+from sqlalchemy import String, select
 import re
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 
 
 class UsersModel(Base):
@@ -31,3 +32,9 @@ class UsersModel(Base):
                 'Пожалуйста, укажите валидный email. Например - test@test.test'
             )
         return value
+
+
+class User(SQLAlchemyBaseUserTable[int], Base):
+    username: Mapped[str] = mapped_column(String(100), unique=True)
+    first_name: Mapped[str | None] = mapped_column(String(64))
+    last_name: Mapped[str | None] = mapped_column(String(128))

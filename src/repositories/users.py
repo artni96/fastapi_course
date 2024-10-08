@@ -1,13 +1,13 @@
 from pydantic import EmailStr
 from sqlalchemy import select
 
-from src.models.users import UsersModel
+from src.models.users import User as UserModel
 from src.repositories.base import BaseRepository
 from src.schemas.users import User, UserJwtWithHashedPassword
 
 
 class UsersRepository(BaseRepository):
-    model = UsersModel
+    model = UserModel
     schema = User
 
     async def get_user_by_email(self, email: EmailStr):

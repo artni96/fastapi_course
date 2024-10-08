@@ -2,6 +2,11 @@ import re
 
 from pydantic import (BaseModel, ConfigDict, Field, field_validator,
                       model_validator, EmailStr)
+from fastapi_users import schemas
+from sqlalchemy import select, func
+from src.models.users import User as UserModel
+from fastapi import HTTPException
+from src.db import async_session_maker
 
 
 class UserRequestAdd(BaseModel):
@@ -64,3 +69,21 @@ class UserJwt(BaseModel):
 
 class UserJwtWithHashedPassword(User):
     hashed_password: str
+
+
+class UserRead(schemas.BaseUser[int]):
+    username: str = Field(max_length=64)
+    first_name: str | None = Field(default=None, max_length=64)
+    last_name: str | None = Field(default=None, max_length=128)
+
+
+class UserCreate(schemas.BaseUserCreate):
+    username: str = Field(max_length=64)
+    first_name: str | None = Field(default=None, max_length=64)
+    last_name: str | None = Field(default=None, max_length=128)
+
+
+class UserUpdate(schemas.BaseUserUpdate):
+    username: str = Field(max_length=64)
+    first_name: str | None = Field(default=None, max_length=64)
+    last_name: str | None = Field(default=None, max_length=128)
