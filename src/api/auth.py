@@ -62,6 +62,14 @@ async def get_jwt(
         return {'access_token': access_token}
 
 
+@router.delete('/logout')
+async def delete_jwt(
+    response: Response
+):
+    response.delete_cookie('access_token')
+    return {'statuts': 'OK'}
+
+
 @router.get('/me')
 async def get_me(user_id: UserIdDep):
     async with async_session_maker() as session:

@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, Query, Request
-import jwt
 from pydantic import BaseModel
 from typing import Annotated
 from src.services.auth import AuthService
+
 
 class PaginationParams(BaseModel):
     page: Annotated[int | None, Query(1, ge=1)]
