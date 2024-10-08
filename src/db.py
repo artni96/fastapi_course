@@ -19,3 +19,8 @@ class PreBase:
 
 
 Base = declarative_base(cls=PreBase)
+
+
+async def get_async_session():
+    async with session:
+        yield session

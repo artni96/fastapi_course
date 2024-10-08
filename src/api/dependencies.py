@@ -1,6 +1,10 @@
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, Query, Request
 from pydantic import BaseModel
-from typing import Annotated
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.db import get_async_session
 from src.services.auth import AuthService
 
 
@@ -24,3 +28,4 @@ def get_current_user_id(token: str = Depends(get_current_token)) -> int:
 
 
 UserIdDep = Annotated[int, Depends(get_current_user_id)]
+SessionDep = Annotated[AsyncSession, Depends(get_async_session)]

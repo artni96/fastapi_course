@@ -27,7 +27,7 @@ class HotelsRepository(BaseRepository):
             offset,
             limit
     ):
-        query = select(self.model)
+        query = select(self.model).order_by('id')
         query = await self.filtered_query(
             query=query,
             title=title,
