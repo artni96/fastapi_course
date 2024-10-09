@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Response
-from sqlalchemy.exc import IntegrityError
+# from sqlalchemy.exc import IntegrityError
 
-from src.api.dependencies import SessionDep, UserIdDep
-from src.repositories.users import UsersRepository
-from src.schemas.users import UserAdd, UserJwt, UserRequestAdd
-from src.services.auth import AuthService
+# from src.api.dependencies import SessionDep, UserIdDep
+# from src.repositories.users import UsersRepository
+# from src.schemas.users import UserAdd, UserJwt, UserRequestAdd
+# from src.services.auth import AuthService
 
-from src.services.user import auth_backend, fastapi_users
+from services.users import auth_backend, fastapi_users
 from src.schemas.users import UserCreate, UserRead, UserUpdate
 
 user_router = APIRouter(prefix='/auth')

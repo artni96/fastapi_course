@@ -6,7 +6,7 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 from src.main import app # noqa
-from src.api.hotels import hotels # noqa
+from api.routers.hotels import hotels # noqa
 from src.api.test.fixtures import hotel_data_to_post # noqa
 
 client = TestClient(app)

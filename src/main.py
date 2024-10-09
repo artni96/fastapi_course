@@ -8,13 +8,15 @@ from fastapi.openapi.docs import (get_redoc_html, get_swagger_ui_html,
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.api.auth import user_router  # noqa
-from src.api.hotels import hotels_router  # noqa
+from src.api.routers.auth import user_router  # noqa
+from src.api.routers.hotels import hotels_router  # noqa
+from src.api.routers.rooms import rooms_router # noqa
 from src.config import settings  # noqa
 
 app = FastAPI(docs_url=None, redoc_url=None)
 app.include_router(hotels_router)
 app.include_router(user_router)
+app.include_router(rooms_router)
 
 
 @app.get("/docs", include_in_schema=False)
