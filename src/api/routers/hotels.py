@@ -7,7 +7,7 @@ from src.repositories.hotels import HotelsRepository
 from src.schemas.hotels import Hotel, HotelAddPut, HotelPatch
 
 
-hotels_router = APIRouter(prefix='/hotels')
+hotels_router = APIRouter(prefix='/hotels', tags=['Отели',])
 
 
 @hotels_router.get('/')

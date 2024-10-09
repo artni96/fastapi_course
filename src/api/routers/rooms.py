@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 
 from src.api.dependencies import SessionDep
 from src.repositories.rooms import RoomsRepository
@@ -19,8 +19,11 @@ async def get_hotel_rooms(
 
 @rooms_router.post('/{hotel_id}')
 async def create_room(
+    *,
     hotel_id: int,
-    room_data: RoomBase,
+    room_data: RoomBase = Body(
+        openapi_examples=RoomBase.Config.schema_extra['examples']
+    ),
     session: SessionDep
 ):
     room = await RoomsRepository(session).add(
