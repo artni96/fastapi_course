@@ -76,13 +76,12 @@ async def update_hotel(
     hotel_id: int,
     hotel_data: HotelAddPut,
     session: AsyncSession = Depends(get_async_session)
-) -> str:
+) -> Hotel:
     result = await HotelsRepository(session).change(
         id=hotel_id,
         data=hotel_data
     )
-    if result['status'] == 'OK':
-        await session.commit()
+    await session.commit()
     return result
 
 
@@ -91,12 +90,10 @@ async def update_hotel_partially(
     hotel_id: int,
     hotel_data: HotelPatch,
     session: SessionDep
-) -> str:
+) -> Hotel:
     result = await HotelsRepository(session).change(
         id=hotel_id,
         exclude_unset=True,
         data=hotel_data
     )
-    if result['status'] == 'OK':
-        await session.commit()
     return result

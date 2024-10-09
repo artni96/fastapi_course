@@ -2,9 +2,10 @@ from sqlalchemy import delete, insert, select, update
 
 from src.models.rooms import RoomsModel
 from src.repositories.base import BaseRepository
-from src.schemas.rooms import RoomBase, RoomInfo, RoomPatch
+from src.schemas.rooms import RoomBase, RoomInfo
 from src.db import engine
 from pydantic import BaseModel
+from sqlalchemy.exc import NoResultFound
 
 
 class RoomsRepository(BaseRepository):
@@ -71,5 +72,8 @@ class RoomsRepository(BaseRepository):
             compile_kwargs={"literal_binds": True})
         )
         result = await self.session.execute(query)
-        model_obj = result.scalars().one()
-        return self.schema.model_validate(model_obj, from_attributes=True)
+        try:
+            model_obj = result.scalars().one()
+            return self.schema.model_validate(model_obj, from_attributes=True)
+        except NoResultFound:
+            return {'status': 'NOT FOUND'}

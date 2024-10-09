@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from sqlalchemy import insert, select, delete, update
 
 from src.api.dependencies import PaginationDep
+from sqlalchemy.exc import NoResultFound
 
 
 class BaseRepository:
@@ -61,11 +62,14 @@ class BaseRepository:
             update(self.model)
             .filter_by(**filtered_by)
             .values(**data.model_dump(exclude_unset=exclude_unset))
+            .returning(self.model)
         )
         result = await self.session.execute(query)
-        if result.rowcount == 1:
-            return {'status': 'OK'}
-        return {'status': 'Unprocessable Entity'}
+        try:
+            model_obj = result.scalars().one()
+            return self.schema.model_validate(model_obj, from_attributes=True)
+        except NoResultFound:
+            return {'status': 'NOT FOUND'}
 
     async def remove(self, **filtered_by):
         query = delete(self.model).filter_by(**filtered_by)
