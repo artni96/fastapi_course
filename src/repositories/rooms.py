@@ -2,7 +2,7 @@ from sqlalchemy import delete, insert, select, update
 
 from src.models.rooms import RoomsModel
 from src.repositories.base import BaseRepository
-from src.schemas.rooms import RoomBase, RoomInfo
+from src.schemas.rooms import RoomCreate, RoomInfo
 from src.db import engine
 from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
@@ -23,7 +23,7 @@ class RoomsRepository(BaseRepository):
     async def add(
             self,
             hotel_id: int,
-            room_data: RoomBase
+            room_data: RoomCreate
     ) -> RoomInfo:
         query = insert(self.model).values(
             **room_data.model_dump(), hotel_id=hotel_id).returning(self.model)

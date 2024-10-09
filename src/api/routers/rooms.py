@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body
 
 from src.api.dependencies import SessionDep
 from src.repositories.rooms import RoomsRepository
-from src.schemas.rooms import RoomBase, RoomPatch
+from src.schemas.rooms import RoomCreate, RoomPatch, RoomPut
 
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
@@ -21,8 +21,8 @@ async def get_hotel_rooms(
 async def create_room(
     *,
     hotel_id: int,
-    room_data: RoomBase = Body(
-        openapi_examples=RoomBase.Config.schema_extra['examples']
+    room_data: RoomCreate = Body(
+        openapi_examples=RoomCreate.Config.schema_extra['examples']
     ),
     session: SessionDep
 ):
@@ -62,9 +62,12 @@ async def remove_hotel_room(
 
 @rooms_router.put('/{hotel_id}/rooms/{room_id}')
 async def update_hotel_room(
+    *,
     hotel_id: int,
     room_id: int,
-    room_data: RoomBase,
+    room_data: RoomPut = Body(
+        openapi_examples=RoomPut.Config.schema_extra['examples']
+    ),
     session: SessionDep
 ):
     result = await RoomsRepository(session).change(
@@ -79,9 +82,12 @@ async def update_hotel_room(
 
 @rooms_router.patch('/{hotel_id}/rooms/{room_id}')
 async def update_hotel_room_partially(
+    *,
     hotel_id: int,
     room_id: int,
-    room_data: RoomPatch,
+    room_data: RoomPatch = Body(
+        openapi_examples=RoomPatch.Config.schema_extra['examples']
+    ),
     session: SessionDep
 ):
     result = await RoomsRepository(session).change(

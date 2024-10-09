@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class RoomBase(BaseModel):
+class RoomCreate(BaseModel):
     title: str = Field(
         description='Название'
     )
@@ -57,9 +57,27 @@ class RoomBase(BaseModel):
         }
 
 
-class RoomInfo(RoomBase):
+class RoomInfo(RoomCreate):
     id: int
     hotel_id: int
+
+
+class RoomPut(RoomCreate):
+
+    class Config:
+        schema_extra = {
+            'examples': {
+                'Изменение всех полей': {
+                    'summary': 'Изменение всех полей',
+                    'value': {
+                        'title': 'Новое название номера',
+                        'description': 'Новое описание номера',
+                        'price': 2000,
+                        'quantity': 7
+                    }
+                }
+            }
+        }
 
 
 class RoomPatch(BaseModel):
@@ -79,3 +97,32 @@ class RoomPatch(BaseModel):
         default=None,
         description='Количество'
     )
+
+    class Config:
+        schema_extra = {
+            'examples': {
+                'Изменение одного поля title': {
+                    'summary': 'Изменение одного поля title',
+                    'value': {
+                        'title': 'Новое название номера'
+                    }
+                },
+                'Изменение полей price и quantity': {
+                    'summary': 'Изменение полей price и quantity',
+                    'value': {
+                        'price': 1000,
+                        'quantity': 5
+                    }
+                },
+                'Изменение полей title, description, price и quantity': {
+                    'summary': ('Изменение полей title, description, '
+                                'price и quantity'),
+                    'value': {
+                        'title': 'Новое название номера',
+                        'description': 'Новое описание номера',
+                        'price': 2000,
+                        'quantity': 7
+                    }
+                }
+            }
+        }
