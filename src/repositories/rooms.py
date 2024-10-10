@@ -5,7 +5,7 @@ from src.repositories.base import BaseRepository
 from src.schemas.rooms import RoomCreate, RoomInfo
 from src.db import engine
 from pydantic import BaseModel
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 
 class RoomsRepository(BaseRepository):
@@ -13,7 +13,7 @@ class RoomsRepository(BaseRepository):
     schema = RoomInfo
 
     async def get_all(self, hotel_id: int) -> list[RoomInfo]:
-        query = select(self.model).where(hotel_id == hotel_id)
+        query = select(self.model).filter_by(hotel_id=hotel_id)
         result = await self.session.execute(query)
         return [
             self.schema.model_validate(room, from_attributes=True)
@@ -36,11 +36,15 @@ class RoomsRepository(BaseRepository):
             hotel_id: int,
             room_id: int
     ) -> RoomInfo:
-        query = select(self.model).filter_by(
-            hotel_id=hotel_id, id=room_id)
+        query = (
+            select(self.model)
+            .filter_by(hotel_id=hotel_id, id=room_id)
+        )
         result = await self.session.execute(query)
         model_obj = result.scalars().one_or_none()
-        return self.schema.model_validate(model_obj, from_attributes=True)
+        if model_obj is not None:
+            return self.schema.model_validate(model_obj, from_attributes=True)
+        return {'status': 'NOT FOUND'}
 
     async def remove(
             self,
@@ -67,13 +71,15 @@ class RoomsRepository(BaseRepository):
             .values(**room_data.model_dump(exclude_unset=exclude_unset))
             .returning(self.model)
         )
-        print(query.compile(
-            engine,
-            compile_kwargs={"literal_binds": True})
-        )
-        result = await self.session.execute(query)
         try:
-            model_obj = result.scalars().one()
-            return self.schema.model_validate(model_obj, from_attributes=True)
-        except NoResultFound:
+            result = await self.session.execute(query)
+            try:
+                model_obj = result.scalars().one()
+                return self.schema.model_validate(
+                    model_obj,
+                    from_attributes=True
+                )
+            except NoResultFound:
+                return {'status': 'NOT FOUND'}
+        except IntegrityError:
             return {'status': 'NOT FOUND'}
