@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class RoomCreate(BaseModel):
@@ -14,6 +14,22 @@ class RoomCreate(BaseModel):
     quantity: int = Field(
         description='Количество'
     )
+
+    @field_validator('price')
+    def validate_price(cls, value: int):
+        if value < 0:
+            raise ValueError(
+                "Значение поля 'price' должно быть положительным!"
+            )
+        return value
+
+    @field_validator('quantity')
+    def validate_quantity(cls, value: int):
+        if value < 0:
+            raise ValueError(
+                "Значение поля 'quantity' должно быть положительным!"
+            )
+        return value
 
     class Config:
         schema_extra = {
@@ -52,7 +68,19 @@ class RoomCreate(BaseModel):
                         'price': 6000,
                         'quantity': 6
                     }
-                }
+                },
+                'Невалидный запрос': {
+                    'summary': 'Невалидный запрос',
+                    'value': {
+                        'title': 'Одноместный номер',
+                        'description': (
+                            'Одноместный - cтандартный с широкой кроватью или '
+                            'с двумя раздельными кроватями'
+                        ),
+                        'price': -10,
+                        'quantity': -10
+                    }
+                },
             }
         }
 
