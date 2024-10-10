@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 
 
-class RoomCreate(BaseModel):
+class RoomCreateRequest(BaseModel):
     title: str = Field(
         description='Название'
     )
@@ -85,12 +85,16 @@ class RoomCreate(BaseModel):
         }
 
 
+class RoomCreate(RoomCreateRequest):
+    hotel_id: int
+
+
 class RoomInfo(RoomCreate):
     id: int
     hotel_id: int
 
 
-class RoomPut(RoomCreate):
+class RoomPutRequest(RoomCreateRequest):
 
     class Config:
         schema_extra = {
@@ -108,7 +112,11 @@ class RoomPut(RoomCreate):
         }
 
 
-class RoomPatch(BaseModel):
+class RoomPut(RoomPutRequest):
+    hotel_id: int
+
+
+class RoomPatchRequest(BaseModel):
     title: str | None = Field(
         default=None,
         description='Название'
@@ -154,3 +162,7 @@ class RoomPatch(BaseModel):
                 }
             }
         }
+
+
+class RoomPatch(RoomPatchRequest):
+    hotel_id: int

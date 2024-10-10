@@ -1,7 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import insert, select, delete, update
-
-from src.api.dependencies import PaginationDep
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import NoResultFound
 
 
@@ -15,26 +13,22 @@ class BaseRepository:
     ) -> None:
         self.session = session
 
-    async def get_all(self, pagination: PaginationDep, *args, **kwargs):
-        self.limit = pagination.per_page or 3
-        self.offset = (pagination.page - 1) * self.limit
-        query = select(self.model)
-        query = (
-            query
-            .offset(self.offset)
-            .limit(self.limit)
-        )
+    async def get_filtered(self, **kwargs):
+        query = select(self.model).filter_by(**kwargs)
         result = await self.session.execute(query)
         return [
             self.schema.model_validate(model_obj, from_attributes=True)
             for model_obj in result.scalars().all()
         ]
 
-    async def get_one_or_none(self, id):
-        query = select(self.model).filter_by(id=id)
+    async def get_all(self, *args, **kwargs):
+        return await self.get_filtered()
+
+    async def get_one_or_none(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
         model_obj = result.scalars().one_or_none()
-        if result is not None:
+        if model_obj is not None:
             return self.schema.model_validate(
                 model_obj, from_attributes=True
             )
