@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.db import get_async_session, async_session_maker
 from src.services.auth import AuthService
 from src.utils.db_manager import DBManager
+from src.models.users import User
+from src.services.users import current_user
 
 
 class PaginationParams(BaseModel):
@@ -36,3 +38,4 @@ async def get_db():
         yield db
 
 DBDep = Annotated[DBManager, Depends(get_db)]
+UserDep = Annotated[User, Depends(current_user)]

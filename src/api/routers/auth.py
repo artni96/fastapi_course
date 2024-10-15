@@ -4,7 +4,7 @@ from services.users import auth_backend, fastapi_users
 from src.schemas.users import UserCreate, UserRead, UserUpdate
 
 
-user_router = APIRouter(prefix='/auth')
+user_router = APIRouter()
 
 
 user_router.include_router(
@@ -17,8 +17,13 @@ user_router.include_router(
     prefix='/auth',
     tags=['Авторизация и аутентификация'],
 )
+users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
+users_router.routes = [
+    rout for rout in users_router.routes if rout.name != 'users:delete_user'
+]  # удалили ручку для удаления пользователя
+
 user_router.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
+    users_router,
     prefix='/users',
     tags=['Пользователи'],
 )
