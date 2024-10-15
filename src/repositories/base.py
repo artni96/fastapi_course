@@ -65,7 +65,7 @@ class BaseRepository:
         except NoResultFound:
             return {'status': 'NOT FOUND'}
 
-    async def remove(self, **filtered_by):
+    async def remove(self, **filtered_by) -> dict:
         query = delete(self.model).filter_by(**filtered_by)
         result = await self.session.execute(query)
         if result.rowcount == 1:

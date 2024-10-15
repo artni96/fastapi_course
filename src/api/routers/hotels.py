@@ -1,9 +1,6 @@
-from fastapi import APIRouter, Body, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Body, Query
 
-from src.api.dependencies import PaginationDep, SessionDep
-from src.db import get_async_session
-from src.repositories.hotels import HotelsRepository
+from src.api.dependencies import DBDep, PaginationDep
 from src.schemas.hotels import Hotel, HotelAddPut, HotelPatch
 
 
@@ -22,10 +19,10 @@ async def get_hotels(
         description='Расположение'
     ),
     pagination: PaginationDep,
-    session: SessionDep
+    db: DBDep
 ) -> list[Hotel]:
     per_page = pagination.per_page or 3
-    return await HotelsRepository(session).get_all(
+    return await db.hotels.get_all(
         limit=per_page,
         offset=per_page * (pagination.page - 1),
         title=title,
@@ -36,24 +33,18 @@ async def get_hotels(
 @hotels_router.get('/{hotel_id}')
 async def get_hotel(
     hotel_id: int,
-    session: SessionDep
+    db: DBDep
 ):
-    result = await HotelsRepository(session).get_one_or_none(
-        id=hotel_id
-    )
-    return result
+    return await db.hotels.get_one_or_none(id=hotel_id)
 
 
 @hotels_router.delete('/{hotel_id}')
 async def delete_hotel(
     hotel_id: int,
-    session: SessionDep
-) -> str:
-    result = await HotelsRepository(session).remove(
-        id=hotel_id
-    )
-    if result['status'] == 'OK':
-        await session.commit()
+    db: DBDep
+) -> dict:
+    result = await db.hotels.remove(id=hotel_id)
+    await db.commit()
     return result
 
 
@@ -63,10 +54,10 @@ async def post_hotel(
     hotel_data: HotelAddPut = Body(
         openapi_examples=Hotel.Config.schema_extra['examples'],
     ),
-    session: SessionDep,
+    db: DBDep
 ):
-    new_hotel = await HotelsRepository(session).add(hotel_data)
-    await session.commit()
+    new_hotel = await db.hotels.add(hotel_data)
+    await db.commit()
 
     return {'status': 'OK', 'data': new_hotel}
 
@@ -75,13 +66,10 @@ async def post_hotel(
 async def update_hotel(
     hotel_id: int,
     hotel_data: HotelAddPut,
-    session: AsyncSession = Depends(get_async_session)
+    db: DBDep
 ) -> Hotel:
-    result = await HotelsRepository(session).change(
-        id=hotel_id,
-        data=hotel_data
-    )
-    await session.commit()
+    result = await db.hotels.change(id=hotel_id, data=hotel_data)
+    await db.commit()
     return result
 
 
@@ -89,11 +77,12 @@ async def update_hotel(
 async def update_hotel_partially(
     hotel_id: int,
     hotel_data: HotelPatch,
-    session: SessionDep
+    db: DBDep
 ) -> Hotel:
-    result = await HotelsRepository(session).change(
+    result = await db.hotels.change(
         id=hotel_id,
         exclude_unset=True,
         data=hotel_data
     )
+    await db.commit()
     return result

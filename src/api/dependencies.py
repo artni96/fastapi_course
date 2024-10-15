@@ -4,8 +4,9 @@ from fastapi import Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db import get_async_session
+from src.db import get_async_session, async_session_maker
 from src.services.auth import AuthService
+from src.utils.db_manager import DBManager
 
 
 class PaginationParams(BaseModel):
@@ -28,4 +29,10 @@ def get_current_user_id(token: str = Depends(get_current_token)) -> int:
 
 
 UserIdDep = Annotated[int, Depends(get_current_user_id)]
-SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
+
+
+async def get_db():
+    async with DBManager(session_factory=async_session_maker) as db:
+        yield db
+
+DBDep = Annotated[DBManager, Depends(get_db)]
