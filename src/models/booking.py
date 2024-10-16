@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from datetime import date
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
+from datetime import date, timedelta
 
 
 class BookingModel(Base):

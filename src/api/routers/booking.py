@@ -11,11 +11,10 @@ async def create_booking(
     booking_data: BookingCreate,
     db: DBDep,
     user: UserDep
-) -> BookingResponse:
+):
     result = await db.bookings.add(
         data=booking_data,
         user_id=user.id
     )
     await db.commit()
-    print(user.id)
     return result
