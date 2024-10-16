@@ -1,16 +1,22 @@
 from src.repositories.base import BaseRepository
 from src.models.booking import BookingModel
-from src.schemas.booking import BookingCreate, BookingResponse
+from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
 from sqlalchemy import insert, select, update
 from src.utils.rooms import check_room_existence
 from datetime import datetime
+from src.db import engine
 
 
 class BookingRepository(BaseRepository):
     model = BookingModel
     schema = BookingResponse
 
-    async def get_all(self, offset=0, limit=3, user_id=None):
+    async def get_all(
+            self,
+            offset=0,
+            limit=3,
+            user_id=None
+    ) -> list[BookingModel]:
         query = select(self.model)
         if user_id:
             query = query.filter_by(user_id=user_id)
@@ -36,7 +42,7 @@ class BookingRepository(BaseRepository):
 
     async def change(
             self,
-            data: BookingCreate,
+            data: BookingUpdate,
             booking_id: int,
             exclude_unset: bool = False):
         if data.room_id:
@@ -49,9 +55,13 @@ class BookingRepository(BaseRepository):
             update(self.model)
             .where(self.model.id == booking_id)
             .values(
-                **data.model_dump(exclude_unset=exclude_unset),
+                **data.model_dump(exclude_none=exclude_unset),
                 updated_at=datetime.now())
             .returning(self.model)
+        )
+        print(new_booking_stmt.compile(
+            engine,
+            compile_kwargs={"literal_binds": True})
         )
         result = await self.session.execute(new_booking_stmt)
         model_obj = result.scalars().one()

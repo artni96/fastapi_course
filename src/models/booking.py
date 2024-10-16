@@ -1,10 +1,10 @@
-from src.db import Base
-from sqlalchemy import DateTime
-from sqlalchemy.orm import Mapped, mapped_column
-from datetime import date
-from sqlalchemy import ForeignKey
-from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import date, datetime
+
+from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column
+
+from src.db import Base
 
 
 class BookingModel(Base):
