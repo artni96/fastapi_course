@@ -1,29 +1,9 @@
 from fastapi import APIRouter
-from src.schemas.booking import BookingCreateRequest, BookingCreate
+from src.schemas.booking import BookingCreateRequest, BookingCreate, BookingUpdateRequest, BookingUpdate
 from src.api.dependencies import DBDep, PaginationDep, UserDep
 
 
 booking_router = APIRouter(prefix='/bookings', tags=['Бронирование номеров'])
-
-
-@booking_router.post('/')
-async def create_booking(
-    booking_data: BookingCreateRequest,
-    db: DBDep,
-    user: UserDep
-):
-    room = await db.rooms.get_one_or_none(id=booking_data.room_id)
-    price = room.price
-    _booking_data = BookingCreate(
-        price=price,
-        user_id=user.id,
-        **booking_data.model_dump()
-    )
-    result = await db.bookings.add(
-        data=_booking_data
-    )
-    await db.commit()
-    return result
 
 
 @booking_router.get('/')
@@ -53,3 +33,55 @@ async def get_my_bookings(
         user_id=user.id
     )
     return bookings
+
+
+@booking_router.post('/')
+async def create_booking(
+    booking_data: BookingCreateRequest,
+    db: DBDep,
+    user: UserDep
+):
+    room = await db.rooms.get_one_or_none(id=booking_data.room_id)
+    price = room.price
+    _booking_data = BookingCreate(
+        price=price,
+        user_id=user.id,
+        **booking_data.model_dump()
+    )
+    result = await db.bookings.add(
+        data=_booking_data
+    )
+    await db.commit()
+    return result
+
+
+@booking_router.patch('/{booking_id}')
+async def update_booking(
+    booking_id: int,
+    db: DBDep,
+    user: UserDep,
+    booking_data: BookingUpdateRequest,
+):
+    booking = await db.bookings.get_one_or_none(id=booking_id)
+    if not booking:
+        return 'Бронирование с указанным id не найдено!'
+    if booking_data.room_id:
+        room = await db.rooms.get_one_or_none(id=booking_data.room_id)
+    else:
+        room = await db.rooms.get_one_or_none(id=booking.room_id)
+    price = room.price
+    _booking_data = BookingUpdate(
+        price=price,
+        **booking_data.model_dump()
+    )
+
+    if booking.user_id == user.id:
+        result = await db.bookings.change(
+            data=_booking_data,
+            exclude_unset=True,
+            booking_id=booking_id
+        )
+        await db.commit()
+        return result
+
+    return 'Только автор может измениять данные!'

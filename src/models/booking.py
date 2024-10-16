@@ -1,9 +1,10 @@
 from src.db import Base
+from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import date
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
-from datetime import date, timedelta
+from datetime import date, datetime
 
 
 class BookingModel(Base):
@@ -13,6 +14,11 @@ class BookingModel(Base):
     date_from: Mapped[date]
     date_to: Mapped[date]
     price: Mapped[int]
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now())
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime, default=None
+    )
 
     @hybrid_property
     def total_cost(self) -> int:
