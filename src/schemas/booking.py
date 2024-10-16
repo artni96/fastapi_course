@@ -1,8 +1,8 @@
-from pydantic import BaseModel, field_validator, model_validator, Field
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator, Field
 from datetime import date, timedelta
 
 
-class BookingCreate(BaseModel):
+class BookingCreateRequest(BaseModel):
     date_from: date = Field(default=date.today)
     date_to: date = Field(default=(date.today() + timedelta(days=1)))
     room_id: int
@@ -25,10 +25,18 @@ class BookingCreate(BaseModel):
         return values
 
 
+class BookingCreate(BookingCreateRequest):
+    price: int
+    user_id: int
+
+
 class BookingResponse(BaseModel):
+    id: int
     date_from: date
     date_to: date
     room_id: int
     user_id: int
     price: int
     total_cost: int
+
+    model_config = ConfigDict(from_attributes=True)

@@ -1,14 +1,12 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, Request
+from fastapi import Depends, Query
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db import get_async_session, async_session_maker
-from src.services.auth import AuthService
-from src.utils.db_manager import DBManager
+from src.db import async_session_maker
 from src.models.users import User
 from src.services.users import current_user
+from src.utils.db_manager import DBManager
 
 
 class PaginationParams(BaseModel):
@@ -17,20 +15,6 @@ class PaginationParams(BaseModel):
 
 
 PaginationDep = Annotated[PaginationParams, Depends()]
-
-
-def get_current_token(request: Request) -> str:
-    token = request.cookies.get('access_token')
-    if not token:
-        raise HTTPException(status_code=401, detail='Не предоставлен токен')
-    return token
-
-
-def get_current_user_id(token: str = Depends(get_current_token)) -> int:
-    return AuthService().decode_token(token).get('user_id')
-
-
-UserIdDep = Annotated[int, Depends(get_current_user_id)]
 
 
 async def get_db():

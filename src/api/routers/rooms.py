@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Body
-from src.models.users import User
 
 from src.api.dependencies import DBDep
 from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomPatch,
