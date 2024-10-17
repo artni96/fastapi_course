@@ -42,6 +42,8 @@ async def create_booking(
     user: UserDep
 ):
     room = await db.rooms.get_one_or_none(id=booking_data.room_id)
+    if not room:
+        return {'status': 'Номер с указанным id не найден.'}
     price = room.price
     _booking_data = BookingCreate(
         price=price,
@@ -53,6 +55,7 @@ async def create_booking(
     )
     await db.commit()
     return result
+
 
 
 @booking_router.patch('/{booking_id}')

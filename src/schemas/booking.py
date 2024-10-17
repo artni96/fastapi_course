@@ -1,16 +1,18 @@
 from datetime import date, datetime, timedelta
 
-from pydantic import (BaseModel, ConfigDict, Field, field_validator,
-                      model_validator, field_serializer)
+from pydantic import (BaseModel, ConfigDict, Field, field_serializer,
+                      field_validator, model_validator)
+
+from src.constants import DATE_FORMAT, DATETIME_FORMAT
 
 
 class BookingCreateRequest(BaseModel):
     date_from: date | str = Field(
-        default=(date.today().strftime('%d.%m.%Y')))
+        default=(date.today().strftime(DATE_FORMAT)))
     date_to: date | str = Field(
         default=(
             date.today() + timedelta(days=1)
-            ).strftime('%d.%m.%Y')
+            ).strftime(DATE_FORMAT)
         )
     room_id: int
 
@@ -24,11 +26,14 @@ class BookingCreateRequest(BaseModel):
 
     @model_validator(mode='before')
     def check_date_to_later_than_date_from(cls, values):
-        print(type(values['date_from']))
-        print('123')
-        values['date_to'] = datetime.strptime(values['date_to'], '%d.%m.%Y')
+        values['date_to'] = datetime.strptime(
+                values['date_to'],
+                DATE_FORMAT
+            )
         values['date_from'] = datetime.strptime(
-            values['date_from'], '%d.%m.%Y')
+                values['date_from'],
+                DATE_FORMAT
+            )
         if values['date_to'] <= values['date_from']:
             raise ValueError(
                 'Время начала бронирвоания не может быть '
@@ -36,9 +41,21 @@ class BookingCreateRequest(BaseModel):
             )
         return values
 
-    @field_serializer('date_from')
-    def serialize_date_from(self, date_from: date):
-        return date_from
+    class Config:
+        schema_extra = {
+            'examples': {
+                'Бронь 1': {
+                    'summary': 'Бронь 1',
+                    'value': {
+                        'date_from': date.today().strftime(DATE_FORMAT),
+                        'date_to': (
+                            date.today() + timedelta(days=1)
+                            ).strftime(DATE_FORMAT),
+                        'room_id': 1
+                    }
+                }
+            }
+        }
 
 
 class BookingCreate(BaseModel):
@@ -52,11 +69,11 @@ class BookingCreate(BaseModel):
 
 class BookingUpdateRequest(BaseModel):
     date_from: date | str | None = Field(
-        default=(date.today().strftime('%d.%m.%Y')))
+        default=(date.today().strftime(DATE_FORMAT)))
     date_to: date | str | None = Field(
         default=(
             date.today() + timedelta(days=1)
-            ).strftime('%d.%m.%Y')
+            ).strftime(DATE_FORMAT)
         )
     room_id: int | None = Field(None)
 
@@ -70,11 +87,9 @@ class BookingUpdateRequest(BaseModel):
 
     @model_validator(mode='before')
     def check_date_to_later_than_date_from(cls, values):
-        print(type(values['date_from']))
-        print('123')
-        values['date_to'] = datetime.strptime(values['date_to'], '%d.%m.%Y')
+        values['date_to'] = datetime.strptime(values['date_to'], DATE_FORMAT)
         values['date_from'] = datetime.strptime(
-            values['date_from'], '%d.%m.%Y')
+            values['date_from'], DATE_FORMAT)
         if values['date_to'] <= values['date_from']:
             raise ValueError(
                 'Время начала бронирвоания не может быть '
@@ -88,7 +103,7 @@ class BookingUpdateRequest(BaseModel):
 class BookingUpdate(BaseModel):
     date_from: date | None = Field(default=date.today)
     date_to: date | None = Field(default=(date.today() + timedelta(days=1)))
-    room_id: int | None = Field(None)
+    room_id: int | None = None
     price: int
 
 
@@ -107,18 +122,18 @@ class BookingResponse(BaseModel):
 
     @field_serializer('date_to')
     def serialize_date_to(self, date_to: date):
-        return date_to.strftime('%d.%m.%Y')
+        return date_to.strftime(DATE_FORMAT)
 
     @field_serializer('date_from')
     def serialize_date_from(self, date_from: date):
-        return date_from.strftime('%d.%m.%Y')
+        return date_from.strftime(DATE_FORMAT)
 
     @field_serializer('created_at')
     def serialize_created_at(self, created_at: datetime):
-        return created_at.strftime('%d.%m.%Y %H:%M')
+        return created_at.strftime(DATETIME_FORMAT)
 
     @field_serializer('updated_at')
     def serialize_updated_at(self, created_at: datetime):
         if created_at:
-            return created_at.strftime('%d.%m.%Y %H:%M')
+            return created_at.strftime(DATETIME_FORMAT)
         return None

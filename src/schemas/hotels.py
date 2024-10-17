@@ -10,7 +10,6 @@ class HotelAddPut(BaseModel):
     )
 
     class Config:
-        title = 'Отели'
         schema_extra = {
             'examples': {
                 'Izmailovo Moscow': {

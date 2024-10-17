@@ -28,11 +28,6 @@ class BookingRepository(BaseRepository):
         ]
 
     async def add(self, data: BookingCreate):
-        if not await check_room_existence(
-            room_id=data.room_id,
-            session=self.session
-        ):
-            return {'status': 'room with given room_id has not been found'}
         new_booking_stmt = insert(self.model).values(
             **data.model_dump()
         ).returning(self.model)

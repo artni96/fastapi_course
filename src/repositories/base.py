@@ -32,7 +32,6 @@ class BaseRepository:
             return self.schema.model_validate(
                 model_obj, from_attributes=True
             )
-        return {'status': 'NOT FOUND'}
 
     async def add(self, data: BaseModel):
         new_data_stmt = (
