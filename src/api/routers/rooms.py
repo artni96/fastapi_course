@@ -16,7 +16,7 @@ async def get_hotel_rooms(
     date_from: date = Query(example=date.today()),
     date_to: date = Query(example=date.today() + timedelta(days=3))
 ):
-    rooms = await db.rooms.get_filtered_by_date(
+    rooms = await db.rooms.get_rooms_by_date(
         hotel_id=hotel_id,
         date_from=date_from,
         date_to=date_to

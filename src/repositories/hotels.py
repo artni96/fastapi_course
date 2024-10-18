@@ -1,16 +1,19 @@
+from datetime import date
 from sqlalchemy import insert, select, func
 
 from src.models.hotels import HotelsModel
 from src.schemas.hotels import Hotel
 from src.db import engine
 from src.repositories.base import BaseRepository
+from src.repositories.queries import get_filtered_by_date
+from src.models.rooms import RoomsModel
 
 
 class HotelsRepository(BaseRepository):
     model = HotelsModel
     schema = Hotel
 
-    async def filtered_query(self, query, location=None, title=None, id=None):
+    def filtered_query(self, query, location=None, title=None, id=None):
         if id is not None:
             query = query.filter_by(id=id)
         if title is not None:
@@ -20,29 +23,35 @@ class HotelsRepository(BaseRepository):
                 location))
         return query
 
-    async def get_all(
+    async def get_filtered_hotels(
             self,
-            title,
-            location,
-            offset,
-            limit
+            date_from: date,
+            date_to: date,
+            location: str,
+            title: str,
+            offset: int,
+            limit: int
     ):
-        query = select(self.model).order_by('id')
-        query = await self.filtered_query(
-            query=query,
-            title=title,
-            location=location
+        avaliable_room_ids = get_filtered_by_date(
+            date_from=date_from,
+            date_to=date_to,
         )
-        query = (
-            query
-            .offset(offset)
-            .limit(limit)
+        filter_room_ids = self.filtered_query(
+            query=avaliable_room_ids,
+            location=location,
+            title=title
         )
-        result = await self.session.execute(query)
-        return [
-            Hotel.model_validate(hotel, from_attributes=True)
-            for hotel in result.scalars().all()
-        ]
+        hotels_with_avaliable_rooms = (
+            select(RoomsModel.hotel_id)
+            .filter(RoomsModel.id.in_(filter_room_ids))
+        )
+        paginated_hotels_with_avaliable_rooms = (
+            hotels_with_avaliable_rooms.limit(limit).offset(offset)
+        )
+        print(paginated_hotels_with_avaliable_rooms.compile(
+            bind=engine, compile_kwargs={'literal_binds': True}))
+        return await self.get_filtered(
+            HotelsModel.id.in_(paginated_hotels_with_avaliable_rooms))
 
     async def add(self, hotel: HotelsModel):
         new_hotel_stmt = (
