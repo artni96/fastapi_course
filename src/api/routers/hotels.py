@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body, Query, HTTPException
 
 from src.api.dependencies import DBDep, PaginationDep
 from src.schemas.hotels import Hotel, HotelAddPut, HotelPatch
@@ -12,11 +12,8 @@ hotels_router = APIRouter(prefix='/hotels', tags=['Отели',])
 async def get_hotels(
     db: DBDep,
     pagination: PaginationDep,
-    # date_from: date | str = Query(example='18.10.2024'),
-    # date_to: date | str = Query(example='21.10.2024'),
-    date_from: date = Query(example='2024-10-18'),
-    date_to: date = Query(example='2024-10-21'),
-
+    date_from: date | str = Query(example='18.10.2024'),
+    date_to: date | str = Query(example='21.10.2024'),
     title: str | None = Query(
         default=None,
         description='Название отеля'
@@ -25,10 +22,12 @@ async def get_hotels(
         default=None,
         description='Расположение'
     ),
-) -> list[Hotel | None]:
-    
-    # date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
-    # date_from = datetime.strptime(date_from, '%d.%m.%Y').date(),
+) -> list[Hotel] | str | None:
+    try:
+        date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+        date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+    except ValueError:
+        return 'Укажите даты в формате dd.mm.yyyy'
     per_page = pagination.per_page or 3
     result = await db.hotels.get_filtered_hotels(
         date_to=date_to,

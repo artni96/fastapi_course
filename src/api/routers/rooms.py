@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Body, Query, Path
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from src.api.dependencies import DBDep
 from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomPatch,
-                               RoomPatchRequest, RoomPut, RoomPutRequest)
+                               RoomPatchRequest, RoomPut, RoomPutRequest, RoomInfo)
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
 
@@ -13,9 +13,14 @@ async def get_hotel_rooms(
     *,
     hotel_id: int = Path(example=1),
     db: DBDep,
-    date_from: date = Query(example=date.today()),
-    date_to: date = Query(example=date.today() + timedelta(days=3))
-):
+    date_from: date | str = Query(example='18.10.2024'),
+    date_to: date | str = Query(example='21.10.2024'),
+) -> list[RoomInfo] | str | None:
+    try:
+        date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+        date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+    except ValueError:
+        return 'Укажите даты в формате dd.mm.yyyy'
     rooms = await db.rooms.get_rooms_by_date(
         hotel_id=hotel_id,
         date_from=date_from,
