@@ -1,7 +1,7 @@
 from sqlalchemy import insert, select, func
 
-from models.hotels import HotelsModel
-from schemas.hotels import Hotel
+from src.models.hotels import HotelsModel
+from src.schemas.hotels import Hotel
 from src.db import engine
 from src.repositories.base import BaseRepository
 
@@ -58,12 +58,3 @@ class HotelsRepository(BaseRepository):
         return Hotel.model_validate(
             model_obj, from_attributes=True
         )
-
-"""with bookings as (
-	select room_id, count(*) as booked_rooms from bookingmodel where date_from >= '2024-10-17' and date_to <= '2024-10-22' group by room_id
-),
-rooms as (
-	select id, quantity, coalesce(booked_rooms, 0), quantity - coalesce(booked_rooms, 0) as avaliable_rooms from roomsmodel
-	left join bookings on bookings.room_id = roomsmodel.id
-)
-select * from rooms"""

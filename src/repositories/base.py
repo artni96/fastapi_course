@@ -13,8 +13,12 @@ class BaseRepository:
     ) -> None:
         self.session = session
 
-    async def get_filtered(self, **kwargs):
-        query = select(self.model).filter_by(**kwargs)
+    async def get_filtered(self, *args, **filter_by):
+        query = (
+            select(self.model)
+            .filter(*args)
+            .filter_by(**filter_by)
+        )
         result = await self.session.execute(query)
         return [
             self.schema.model_validate(model_obj, from_attributes=True)

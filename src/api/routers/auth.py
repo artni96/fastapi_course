@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from services.users import auth_backend, fastapi_users
+from src.services.users import auth_backend, fastapi_users
 from src.schemas.users import UserCreate, UserRead, UserUpdate
 
 
