@@ -1,14 +1,16 @@
-from src.models.rooms import RoomsModel
-from src.models.booking import BookingModel
 from datetime import date
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
+from src.db import engine
+from src.models.booking import BookingModel
+from src.models.rooms import RoomsModel
 
 
 def get_filtered_by_date(
-        date_from: date,
-        date_to: date,
-        hotel_id: int | None = None
+    date_from: date,
+    date_to: date,
+    hotel_id: int | None = None,
 ):
     bookings_by_date = (
         select(
@@ -20,7 +22,7 @@ def get_filtered_by_date(
             BookingModel.date_to <= date_to)
         .group_by(BookingModel.room_id)
         .cte(name='bookings')
-    )
+    )   
 
     booked_rooms = (
         select(
@@ -57,3 +59,40 @@ def get_filtered_by_date(
     # print(avaliable_rooms_id.compile(
     #     bind=engine, compile_kwargs={'literal_binds': True}))
     return avaliable_rooms_id
+
+
+def get_avaliable_rooms_number(
+    date_from: date,
+    date_to: date,
+    room_id: int | None = None
+):
+    booked_rooms_amount = (
+        select(
+            RoomsModel.id,
+            func.count('*').label('booked_rooms'))
+        .select_from(RoomsModel)
+        .where(RoomsModel.id == room_id)
+        .where(
+            BookingModel.date_from >= date_from,
+            BookingModel.date_to <= date_to)
+        .group_by(RoomsModel.id)
+    ).cte('booked_rooms_amount')
+    print(booked_rooms_amount.compile(
+        bind=engine, compile_kwargs={'literal_binds': True}))
+
+    room_with_avaliable_quantity = (
+        select(
+            RoomsModel.id,
+            RoomsModel.quantity,
+            booked_rooms_amount.c.booked_rooms.label('booked_rooms'),
+            (RoomsModel.quantity - func.coalesce(
+                booked_rooms_amount.c.booked_rooms)).label('avaliable_rooms'),
+
+            )
+        ).select_from(
+            booked_rooms_amount
+        ).outerjoin(
+            RoomsModel,
+            RoomsModel.id == booked_rooms_amount.c.id
+        )
+    return room_with_avaliable_quantity

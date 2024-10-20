@@ -166,3 +166,22 @@ class RoomPatchRequest(BaseModel):
 
 class RoomPatch(RoomPatchRequest):
     hotel_id: int
+
+
+class RoomTestResponse(BaseModel):
+    # title: str = Field(
+    #     description='Название'
+    # )
+    # description: str = Field(
+    #     description='Описание номера'
+    # )
+    # price: int = Field(
+    #     description='цена за сутки'
+    # )
+    quantity: int
+    booked_rooms: int
+    avaliable_rooms: int = Field(
+        description='Количество'
+    )
+    id: int
+    # hotel_id: int
