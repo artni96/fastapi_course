@@ -8,7 +8,10 @@ from src.schemas.hotels import Hotel, HotelAddPut, HotelPatch
 hotels_router = APIRouter(prefix='/hotels', tags=['Отели',])
 
 
-@hotels_router.get('/')
+@hotels_router.get(
+    '/',
+    summary='Получение отелей с свободными номерами в указанный период'
+)
 async def get_hotels(
     db: DBDep,
     pagination: PaginationDep,
@@ -40,7 +43,10 @@ async def get_hotels(
     return result
 
 
-@hotels_router.get('/{hotel_id}')
+@hotels_router.get(
+    '/{hotel_id}',
+    summary='Получение информации об отеле по "hotel_id"'
+)
 async def get_hotel(
     hotel_id: int,
     db: DBDep
@@ -48,7 +54,10 @@ async def get_hotel(
     return await db.hotels.get_one_or_none(id=hotel_id)
 
 
-@hotels_router.delete('/{hotel_id}')
+@hotels_router.delete(
+    '/{hotel_id}',
+    summary='Удаление отеля по "hotel_id"'
+)
 async def delete_hotel(
     hotel_id: int,
     db: DBDep
@@ -58,7 +67,10 @@ async def delete_hotel(
     return result
 
 
-@hotels_router.post('/')
+@hotels_router.post(
+    '/',
+    summary='Создание нового отеля'
+)
 async def post_hotel(
     *,
     hotel_data: HotelAddPut = Body(
@@ -72,7 +84,10 @@ async def post_hotel(
     return {'status': 'OK', 'data': new_hotel}
 
 
-@hotels_router.put('/{hotel_id}')
+@hotels_router.put(
+    '/{hotel_id}',
+    summary='Полное обновление информации об отеле "hotel_id"'
+)
 async def update_hotel(
     hotel_id: int,
     hotel_data: HotelAddPut,
@@ -83,7 +98,10 @@ async def update_hotel(
     return result
 
 
-@hotels_router.patch('/{hotel_id}')
+@hotels_router.patch(
+    '/{hotel_id}',
+    summary='Частичное обновление информации об отеле "hotel_id"'
+)
 async def update_hotel_partially(
     hotel_id: int,
     hotel_data: HotelPatch,

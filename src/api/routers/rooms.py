@@ -1,14 +1,23 @@
-from fastapi import APIRouter, Body, Query, Path
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
+
+from fastapi import APIRouter, Body, Path, Query
 
 from src.api.dependencies import DBDep
-from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomPatch,
-                               RoomPatchRequest, RoomPut, RoomPutRequest, RoomInfo)
+from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomInfo,
+                               RoomPatch, RoomPatchRequest, RoomPut,
+                               RoomPutRequest)
+
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
 
 
-@rooms_router.get('/{hotel_id}/rooms')
+@rooms_router.get(
+    '/{hotel_id}/rooms',
+    summary=(
+        'Получение информации о свободных номерах (без точного количества)'
+        ' отеля по "hotel_id" в указанный период'
+    )
+)
 async def get_hotel_rooms(
     *,
     hotel_id: int = Path(example=1),
@@ -29,7 +38,9 @@ async def get_hotel_rooms(
     return rooms
 
 
-@rooms_router.post('/{hotel_id}')
+@rooms_router.post(
+    '/{hotel_id}',
+    summary='Создание нового типа номеров для отеля "hotel_id"')
 async def create_room(
     *,
     hotel_id: int,
@@ -44,7 +55,13 @@ async def create_room(
     return room
 
 
-@rooms_router.get('/{hotel_id}/rooms/{room_id}')
+@rooms_router.get(
+    '/{hotel_id}/rooms/{room_id}',
+    summary=(
+        'Получение общей информации о всех типах номеров для '
+        'отеля "hotel_id"'
+    )
+)
 async def get_hotel_room(
     hotel_id: int,
     room_id: int,
@@ -57,7 +74,13 @@ async def get_hotel_room(
     return room
 
 
-@rooms_router.get('/{hotel_id}/extended-rooms/')
+@rooms_router.get(
+    '/{hotel_id}/extended-rooms/',
+    summary=(
+        'Получение подробной информации о количестве свободных номеров'
+        ' отеля по "hotel_id" в указанный период'
+    )
+)
 async def get_filtered_hotel_room_by_date(
     *,
     hotel_id: int,
@@ -81,7 +104,13 @@ async def get_filtered_hotel_room_by_date(
     return room
 
 
-@rooms_router.get('/{hotel_id}/extended-rooms/{room_id}')
+@rooms_router.get(
+    '/{hotel_id}/extended-rooms/{room_id}',
+    summary=(
+        'Получение подробной информации о количестве свободных номеров'
+        ' определенного типа "room_id" в указанный период'
+    )
+)
 async def get_rooms_by_date(
     *,
     # hotel_id: int,
@@ -104,7 +133,12 @@ async def get_rooms_by_date(
     return room
 
 
-@rooms_router.delete('/{hotel_id}/rooms/{room_id}')
+@rooms_router.delete(
+    '/{hotel_id}/rooms/{room_id}',
+    summary=(
+        'Удаление типа номер по "room_id" для отеля "hotel_id"'
+    )
+)
 async def remove_hotel_room(
     hotel_id: int,
     room_id: int,
@@ -118,7 +152,13 @@ async def remove_hotel_room(
     return result
 
 
-@rooms_router.put('/{hotel_id}/rooms/{room_id}')
+@rooms_router.put(
+    '/{hotel_id}/rooms/{room_id}',
+    summary=(
+        'Полное обновление инофрмации о типе номеров по "room_id" для отеля '
+        '"hotel_id"'
+    )
+)
 async def update_hotel_room(
     *,
     hotel_id: int,
@@ -139,7 +179,13 @@ async def update_hotel_room(
     return result
 
 
-@rooms_router.patch('/{hotel_id}/rooms/{room_id}')
+@rooms_router.patch(
+    '/{hotel_id}/rooms/{room_id}',
+    summary=(
+        'Частичное обновление инофрмации о типе номеров по "room_id" для отеля '
+        '"hotel_id"'
+    )
+)
 async def update_hotel_room_partially(
     *,
     hotel_id: int,

@@ -2,7 +2,6 @@ from datetime import date
 
 from sqlalchemy import func, select
 
-from src.db import engine
 from src.models.booking import BookingModel
 from src.models.rooms import RoomsModel
 

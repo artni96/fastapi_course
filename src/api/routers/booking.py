@@ -7,7 +7,10 @@ from src.schemas.booking import (BookingCreate, BookingCreateRequest,
 booking_router = APIRouter(prefix='/bookings', tags=['Бронирование номеров'])
 
 
-@booking_router.get('/')
+@booking_router.get(
+    '/',
+    summary='Получение информации всех бронированиях'
+)
 async def get_all_bookings(
     db: DBDep,
     user: UserDep,
@@ -21,7 +24,13 @@ async def get_all_bookings(
     return bookings
 
 
-@booking_router.get('/me')
+@booking_router.get(
+    '/me',
+    summary=(
+        'Получение информации о всех бронированиях номеров авторизованного '
+        'пользователя'
+    )
+)
 async def get_my_bookings(
     db: DBDep,
     user: UserDep,
@@ -36,7 +45,10 @@ async def get_my_bookings(
     return bookings
 
 
-@booking_router.post('/')
+@booking_router.post(
+    '/',
+    summary='Создание нового бронирования номера'
+)
 async def create_booking(
     booking_data: BookingCreateRequest,
     db: DBDep,
@@ -44,7 +56,7 @@ async def create_booking(
 ):
     room = await db.rooms.get_one_or_none(id=booking_data.room_id)
     if not room:
-        return {'status': 'Номер с указанным id не найден.'}
+        return {'status': 'Номер с указанным id не найден'}
     price = room.price
     _booking_data = BookingCreate(
         price=price,
@@ -58,8 +70,10 @@ async def create_booking(
     return result
 
 
-
-@booking_router.patch('/{booking_id}')
+@booking_router.patch(
+    '/{booking_id}',
+    summary='Частичное обновление бронирования номера по "booking_id"'
+)
 async def update_booking(
     booking_id: int,
     db: DBDep,
