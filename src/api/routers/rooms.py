@@ -57,8 +57,32 @@ async def get_hotel_room(
     return room
 
 
-@rooms_router.get('/{hotel_id}/test-rooms/{room_id}')
-async def get_filtered_hotel_room(
+@rooms_router.get('/{hotel_id}/extended-rooms/')
+async def get_filtered_hotel_room_by_date(
+    *,
+    hotel_id: int,
+    # room_id: int,
+    date_from: date | str = Query(example='18.10.2024'),
+    date_to: date | str = Query(example='21.10.2024'),
+    db: DBDep
+):
+    try:
+        date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+        date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+    except ValueError:
+        return 'Укажите даты в формате dd.mm.yyyy'
+
+    room = await db.rooms.get_room_with_avaliable_rooms_number(
+        # room_id=room_id,
+        date_from=date_from,
+        date_to=date_to,
+        hotel_id=hotel_id
+    )
+    return room
+
+
+@rooms_router.get('/{hotel_id}/extended-rooms/{room_id}')
+async def get_rooms_by_date(
     *,
     # hotel_id: int,
     room_id: int,
@@ -73,7 +97,6 @@ async def get_filtered_hotel_room(
         return 'Укажите даты в формате dd.mm.yyyy'
 
     room = await db.rooms.get_room_with_avaliable_rooms_number(
-        # hotel_id=hotel_id,
         room_id=room_id,
         date_from=date_from,
         date_to=date_to

@@ -1,12 +1,14 @@
 from datetime import date
-from sqlalchemy import insert, select, func
 
-from src.models.hotels import HotelsModel
-from src.schemas.hotels import Hotel
+from sqlalchemy import insert, select
+
 from src.db import engine
-from src.repositories.base import BaseRepository
-from src.repositories.queries import get_filtered_by_date
+from src.models.hotels import HotelsModel
 from src.models.rooms import RoomsModel
+from src.repositories.base import BaseRepository
+from src.repositories.queries.rooms import (
+    common_response_with_filtered_hotel_room_ids_by_date, get_filtered_by_date)
+from src.schemas.hotels import Hotel
 
 
 class HotelsRepository(BaseRepository):
@@ -32,9 +34,12 @@ class HotelsRepository(BaseRepository):
             offset: int,
             limit: int
     ):
-        avaliable_room_ids = get_filtered_by_date(
-            date_from=date_from,
-            date_to=date_to,
+        avaliable_room_ids = (
+            common_response_with_filtered_hotel_room_ids_by_date(
+                date_from=date_from,
+                date_to=date_to,
+                hotel_id=id
+            )
         )
         filter_room_ids = self.filtered_query(
             query=avaliable_room_ids,
