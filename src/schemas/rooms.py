@@ -47,7 +47,8 @@ class RoomCreateRequest(BaseModel):
                             'с двумя раздельными кроватями'
                         ),
                         'price': 3000,
-                        'quantity': 10
+                        'quantity': 10,
+                        'facility_ids': [3, 4]
                     }
                 },
                 'Двуместный номер': {
@@ -58,7 +59,8 @@ class RoomCreateRequest(BaseModel):
                             'Двухместный - cтандартный с двумя кроватями'
                         ),
                         'price': 4500,
-                        'quantity': 7
+                        'quantity': 7,
+                        'facility_ids': [3,]
                     }
                 },
                 'Двуместный номер повышенной комфортности': {
@@ -70,7 +72,7 @@ class RoomCreateRequest(BaseModel):
                             'кроватью или с двумя раздельными кроватями'
                         ),
                         'price': 6000,
-                        'quantity': 6
+                        'quantity': 6,
                     }
                 },
                 'Невалидный запрос': {
@@ -109,7 +111,6 @@ class RoomCreate(BaseModel):
 
 class RoomInfo(RoomCreate):
     id: int
-    hotel_id: int
 
 
 class RoomPutRequest(RoomCreateRequest):
@@ -123,15 +124,16 @@ class RoomPutRequest(RoomCreateRequest):
                         'title': 'Новое название номера',
                         'description': 'Новое описание номера',
                         'price': 2000,
-                        'quantity': 7
+                        'quantity': 7,
+                        'facility_ids': [3, 4]
                     }
                 }
             }
         }
 
 
-class RoomPut(RoomPutRequest):
-    hotel_id: int
+class RoomPut(RoomCreate):
+    pass
 
 
 class RoomPatchRequest(BaseModel):

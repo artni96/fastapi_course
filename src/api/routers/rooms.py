@@ -91,7 +91,6 @@ async def get_hotel_room(
 async def get_filtered_hotel_room_by_date(
     *,
     hotel_id: int,
-    # room_id: int,
     date_from: date | str = Query(example='18.10.2024'),
     date_to: date | str = Query(example='21.10.2024'),
     db: DBDep
@@ -120,7 +119,6 @@ async def get_filtered_hotel_room_by_date(
 )
 async def get_rooms_by_date(
     *,
-    # hotel_id: int,
     room_id: int,
     date_from: date | str = Query(example='18.10.2024'),
     date_to: date | str = Query(example='21.10.2024'),
@@ -175,6 +173,18 @@ async def update_hotel_room(
     ),
     db: DBDep
 ):
+    new_room_facility_ids = room_data.facility_ids
+    current_room_facility_ids = await db.rooms.get_room_facilities(
+        room_id=room_id
+    )
+    facility_ids_to_delete = [
+        id for id in current_room_facility_ids
+        if id not in new_room_facility_ids
+    ]
+    facility_ids_to_add = [
+        id for id in new_room_facility_ids
+        if id not in current_room_facility_ids
+    ]
     _room_data = RoomPut(hotel_id=hotel_id, **room_data.model_dump())
     result = await db.rooms.change(
         id=room_id,
@@ -182,6 +192,12 @@ async def update_hotel_room(
         data=_room_data,
         exclude_unset=False
     )
+    facility_ids = [
+        RoomFacilityAddRequest(room_id=room_id, facility_id=facility_id)
+        for facility_id in facility_ids_to_add
+    ]
+    await db.room_facilities.remove_bulk(data=facility_ids_to_delete)
+    await db.room_facilities.add_bulk(data=facility_ids)
     await db.commit()
     return result
 

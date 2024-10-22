@@ -85,3 +85,15 @@ class BaseRepository:
         if result.rowcount == 1:
             return {'status': 'OK'}
         return {'status': 'Unprocessable Entity'}
+
+    async def remove_bulk(self, **filtered_by):
+        all_ids_to_del = list(filtered_by.values())[0]
+        print(type(all_ids_to_del))
+        query = delete(self.model)
+        for id in all_ids_to_del:
+            query = query.where(self.model.facility_id == id)
+        print(query.compile(
+            engine,
+            compile_kwargs={"literal_binds": True})
+        )
+        await self.session.execute(query)

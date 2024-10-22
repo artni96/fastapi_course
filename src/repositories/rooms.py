@@ -6,6 +6,8 @@ from src.repositories.queries.rooms import (
     common_response_with_filtered_hotel_room_ids_by_date,
     get_avaliable_rooms_number)
 from src.schemas.rooms import RoomInfo, RoomTestResponse
+from sqlalchemy import select
+from src.models.facilities import RoomFacilitiesModel
 
 
 class RoomsRepository(BaseRepository):
@@ -50,3 +52,11 @@ class RoomsRepository(BaseRepository):
         return [
             RoomTestResponse.model_validate(room)
             for room in model_objs]
+
+    async def get_room_facilities(
+        self, room_id: int
+    ):
+        room_facility_ids = select(RoomFacilitiesModel.facility_id).where(
+            RoomFacilitiesModel.room_id == room_id)
+        result = await self.session.execute(room_facility_ids)
+        return result.scalars().all()
