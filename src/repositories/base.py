@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import NoResultFound
+from src.db import engine
 
 
 class BaseRepository:
@@ -14,12 +15,17 @@ class BaseRepository:
         self.session = session
 
     async def get_filtered(self, *args, **filter_by):
+        filter_by = {k: v for k, v in filter_by.items() if v is not None}
         query = (
             select(self.model)
             .filter(*args)
             .filter_by(**filter_by)
         )
         result = await self.session.execute(query)
+        print(query.compile(
+            engine,
+            compile_kwargs={"literal_binds": True})
+        )
         return [
             self.schema.model_validate(model_obj, from_attributes=True)
             for model_obj in result.scalars().all()

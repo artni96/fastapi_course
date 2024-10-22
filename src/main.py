@@ -12,6 +12,7 @@ from src.api.routers.auth import user_router  # noqa
 from src.api.routers.hotels import hotels_router  # noqa
 from src.api.routers.rooms import rooms_router # noqa
 from src.api.routers.booking import booking_router # noqa
+from src.api.routers.facilities import facilities_router  # noqa
 from src.config import settings  # noqa
 
 app = FastAPI(docs_url=None, redoc_url=None)
@@ -19,6 +20,7 @@ app.include_router(hotels_router)
 app.include_router(user_router)
 app.include_router(rooms_router)
 app.include_router(booking_router)
+app.include_router(facilities_router)
 
 
 @app.get("/docs", include_in_schema=False)
