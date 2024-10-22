@@ -1,6 +1,6 @@
 from src.repositories.base import BaseRepository
-from src.models.facilities import FacilitiesMolel
-from src.schemas.facilities import FacilityResponse
+from src.models.facilities import FacilitiesMolel, RoomFacilitiesModel
+from src.schemas.facilities import FacilityResponse, RoomFacilityAddRequest
 from sqlalchemy import select
 
 
@@ -23,3 +23,8 @@ class FacilitiesRepository(BaseRepository):
             self.schema.model_validate(model_obj, from_attributes=True)
             for model_obj in result.scalars().all()
         ]
+
+
+class RoomsFacilitiesRepository(BaseRepository):
+    model = RoomFacilitiesModel
+    schema = RoomFacilityAddRequest

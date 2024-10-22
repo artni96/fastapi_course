@@ -14,6 +14,10 @@ class RoomCreateRequest(BaseModel):
     quantity: int = Field(
         description='Количество'
     )
+    facility_ids: list[int] | None = Field(
+        default=None,
+        description='Список id удобств номера'
+    )
 
     @field_validator('price')
     def validate_price(cls, value: int):
@@ -85,8 +89,22 @@ class RoomCreateRequest(BaseModel):
         }
 
 
-class RoomCreate(RoomCreateRequest):
-    hotel_id: int
+class RoomCreate(BaseModel):
+    hotel_id: int = Field(
+        description='id отеля'
+    )
+    title: str = Field(
+        description='Название'
+    )
+    description: str = Field(
+        description='Описание номера'
+    )
+    price: int = Field(
+        description='цена за сутки'
+    )
+    quantity: int = Field(
+        description='Количество'
+    )
 
 
 class RoomInfo(RoomCreate):

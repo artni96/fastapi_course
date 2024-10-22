@@ -6,6 +6,7 @@ from src.api.dependencies import DBDep
 from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomInfo,
                                RoomPatch, RoomPatchRequest, RoomPut,
                                RoomPutRequest)
+from src.schemas.facilities import RoomFacilityAddRequest
 
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
@@ -51,6 +52,12 @@ async def create_room(
 ):
     _room_data = RoomCreate(hotel_id=hotel_id, **room_data.model_dump())
     room = await db.rooms.add(data=_room_data)
+    facilities = [
+        RoomFacilityAddRequest(room_id=room.id, facility_id=facility_id)
+        for facility_id in room_data.facility_ids
+    ]
+    await db.room_facilities.add_bulk(data=facilities)
+
     await db.commit()
     return room
 

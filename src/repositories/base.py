@@ -55,6 +55,11 @@ class BaseRepository:
             new_model_obj,
             from_attributes=True)
 
+    async def add_bulk(self, data: list[BaseModel]):
+        managed_data = [obj.model_dump() for obj in data]
+        new_data_stmt = (insert(self.model).values(managed_data))
+        await self.session.execute(new_data_stmt)
+
     async def change(
             self,
             data: BaseModel,

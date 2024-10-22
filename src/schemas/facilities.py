@@ -7,3 +7,8 @@ class FacilityBaseRequest(BaseModel):
 
 class FacilityResponse(FacilityBaseRequest):
     id: int
+
+
+class RoomFacilityAddRequest(BaseModel):
+    room_id: int
+    facility_id: int
