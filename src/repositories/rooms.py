@@ -5,14 +5,15 @@ from src.repositories.base import BaseRepository
 from src.repositories.queries.rooms import (
     common_response_with_filtered_hotel_room_ids_by_date,
     get_avaliable_rooms_number)
-from src.schemas.rooms import RoomInfo, RoomTestResponse
+from src.schemas.rooms import RoomExtendedResponse
 from sqlalchemy import select
-from src.models.facilities import RoomFacilitiesModel
+from src.schemas.rooms import RoomWithFacilitiesResponse
+from sqlalchemy.orm import selectinload, joinedload
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsModel
-    schema = RoomInfo
+    schema = RoomWithFacilitiesResponse
 
     async def get_rooms_by_date(
             self,
@@ -27,7 +28,19 @@ class RoomsRepository(BaseRepository):
                 hotel_id=hotel_id
             )
         )
-        return await self.get_filtered(self.model.id.in_(avaliable_rooms_id))
+
+        query = (
+            select(self.model)
+            .options(selectinload(self.model.facilities))
+            .filter(self.model.id.in_(avaliable_rooms_id))
+        )
+        result = await self.session.execute(query)
+        model_objs = result.unique().scalars().all()
+
+        return [
+            self.schema.model_validate(model)
+            for model in model_objs
+        ]
 
     async def get_room_with_avaliable_rooms_number(
             self,
@@ -44,11 +57,24 @@ class RoomsRepository(BaseRepository):
                 hotel_id=hotel_id
             )
         )
-        print(avaliable_rooms_amount.compile(
-            bind=engine, compile_kwargs={'literal_binds': True}))
+        # print(avaliable_rooms_amount.compile(
+        #     bind=engine, compile_kwargs={'literal_binds': True}))
 
         result = await self.session.execute(avaliable_rooms_amount)
         model_objs = result.mappings().all()
         return [
-            RoomTestResponse.model_validate(room)
+            RoomExtendedResponse.model_validate(room)
             for room in model_objs]
+
+    async def get_one_or_none(self, hotel_id: int, id: int):
+        query = (
+            select(self.model)
+            .options(joinedload(self.model.facilities))
+            .filter_by(hotel_id=hotel_id, id=id)
+        )
+        result = await self.session.execute(query)
+        model_obj = result.unique().scalars().one_or_none()
+        if model_obj is not None:
+            return self.schema.model_validate(
+                model_obj, from_attributes=True
+            )

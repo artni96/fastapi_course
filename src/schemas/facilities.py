@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class FacilityBaseRequest(BaseModel):
@@ -7,6 +7,8 @@ class FacilityBaseRequest(BaseModel):
 
 class FacilityResponse(FacilityBaseRequest):
     id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RoomFacilityAddRequest(BaseModel):

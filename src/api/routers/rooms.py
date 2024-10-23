@@ -3,10 +3,9 @@ from datetime import date, datetime
 from fastapi import APIRouter, Body, Path, Query
 
 from src.api.dependencies import DBDep
-from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomInfo,
-                               RoomPatch, RoomPatchRequest, RoomPut,
-                               RoomPutRequest)
 from src.schemas.facilities import RoomFacilityAddRequest
+from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomPatch,
+                               RoomPatchRequest, RoomPut, RoomPutRequest)
 
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
@@ -25,7 +24,7 @@ async def get_hotel_rooms(
     db: DBDep,
     date_from: date | str = Query(example='18.10.2024'),
     date_to: date | str = Query(example='21.10.2024'),
-) -> list[RoomInfo] | str | None:
+) -> list:
     try:
         date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
         date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
@@ -208,7 +207,8 @@ async def update_hotel_room_partially(
 ):
     _room_data = RoomPatch(
         hotel_id=hotel_id,
-        **room_data.model_dump(exclude_unset=True)
+        **room_data.model_dump(
+            exclude_unset=True, exclude='facility_ids')
     )
     result = await db.rooms.change(
         id=room_id,
@@ -218,9 +218,10 @@ async def update_hotel_room_partially(
     )
     new_facility_ids = room_data.facility_ids
     if new_facility_ids:
-        await db.room_facilities.room_facility_manager(
-            room_id=room_data,
-            new_facility_ids=new_facility_ids
-        )
-    await db.commit()
+        if new_facility_ids:
+            await db.room_facilities.room_facility_manager(
+                room_id=room_id,
+                new_facility_ids=new_facility_ids
+            )
+        await db.commit()
     return result

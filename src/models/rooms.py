@@ -1,6 +1,8 @@
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import (Mapped, mapped_column, relationship, selectinload,
+                            validates)
+
 from src.db import Base
-from sqlalchemy.orm import Mapped, mapped_column, validates
-from sqlalchemy import ForeignKey, Column, Integer, CheckConstraint
 
 
 class RoomsModel(Base):
@@ -10,12 +12,11 @@ class RoomsModel(Base):
     description: Mapped[str | None]
     price: Mapped[int]
     quantity: Mapped[int]
-    # price: Mapped[int] = Column(
-    #     Integer, CheckConstraint('price > 0')
-    # )
-    # quantity: Mapped[int] = Column(
-    #     Integer, CheckConstraint('quantity > 0')
-    # )
+
+    facilities: Mapped[list['FacilitiesMolel']] = relationship(
+        back_populates='rooms',
+        secondary='roomfacilitiesmodel'
+    )
 
     @validates('price')
     def validate_price(self, key, value: int):

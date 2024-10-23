@@ -34,11 +34,11 @@ class RoomsFacilitiesRepository(BaseRepository):
         room_id: int,
         new_facility_ids: list[int]
     ):
-        current_facility_ids = (
+        current_facility_ids_stmt = (
             select(RoomFacilitiesModel.facility_id)
             .where(RoomFacilitiesModel.room_id == room_id)
         )
-        result = await self.session.execute(current_facility_ids)
+        result = await self.session.execute(current_facility_ids_stmt)
         current_facility_ids = result.scalars().all()
 
         facility_ids_to_delete = list(

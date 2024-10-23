@@ -1,6 +1,7 @@
 from datetime import date
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from src.models.booking import BookingModel
 from src.models.rooms import RoomsModel
@@ -65,7 +66,7 @@ def common_response_with_filtered_hotel_room_ids_by_date(
     )
 
     if hotel_id is not None:
-        avaliable_room_ids.where(booked_rooms.c.id.in_(hotel_room_ids_list))
+        avaliable_room_ids = avaliable_room_ids.where(booked_rooms.c.id.in_(hotel_room_ids_list))
 
     # print(avaliable_rooms_id.compile(
     #     bind=engine, compile_kwargs={'literal_binds': True}))

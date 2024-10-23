@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from src.schemas.facilities import FacilityResponse
 
 
 class RoomCreateRequest(BaseModel):
@@ -108,9 +109,16 @@ class RoomCreate(BaseModel):
         description='Количество'
     )
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class RoomInfo(RoomCreate):
     id: int
+
+
+class RoomWithFacilitiesResponse(RoomInfo):
+
+    facilities: list[FacilityResponse]
 
 
 class RoomPutRequest(RoomCreateRequest):
@@ -194,16 +202,7 @@ class RoomPatch(RoomPatchRequest):
     hotel_id: int
 
 
-class RoomTestResponse(BaseModel):
-    hotel_id: int
-    id: int
-    title: str = Field(
-        description='Название'
-    )
-    description: str = Field(
-        description='Описание номера'
-    )
-    quantity: int
+class RoomExtendedResponse(RoomInfo):
     booked_rooms: int
     avaliable_rooms: int = Field(
         description='Количество'
