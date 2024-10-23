@@ -7,6 +7,7 @@ from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomInfo,
                                RoomPatch, RoomPatchRequest, RoomPut,
                                RoomPutRequest)
 from src.schemas.facilities import RoomFacilityAddRequest
+from src.utils.rooms import room_facilities_manager
 
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
@@ -173,18 +174,7 @@ async def update_hotel_room(
     ),
     db: DBDep
 ):
-    new_room_facility_ids = room_data.facility_ids
-    current_room_facility_ids = await db.rooms.get_room_facilities(
-        room_id=room_id
-    )
-    facility_ids_to_delete = [
-        id for id in current_room_facility_ids
-        if id not in new_room_facility_ids
-    ]
-    facility_ids_to_add = [
-        id for id in new_room_facility_ids
-        if id not in current_room_facility_ids
-    ]
+
     _room_data = RoomPut(hotel_id=hotel_id, **room_data.model_dump())
     result = await db.rooms.change(
         id=room_id,
@@ -192,12 +182,12 @@ async def update_hotel_room(
         data=_room_data,
         exclude_unset=False
     )
-    facility_ids = [
-        RoomFacilityAddRequest(room_id=room_id, facility_id=facility_id)
-        for facility_id in facility_ids_to_add
-    ]
-    await db.room_facilities.remove_bulk(data=facility_ids_to_delete)
-    await db.room_facilities.add_bulk(data=facility_ids)
+    new_facility_ids = room_data.facility_ids
+    await room_facilities_manager(
+        room_id=room_id,
+        new_facility_ids=new_facility_ids,
+        db=db
+    )
     await db.commit()
     return result
 
@@ -205,8 +195,8 @@ async def update_hotel_room(
 @rooms_router.patch(
     '/{hotel_id}/rooms/{room_id}',
     summary=(
-        'Частичное обновление инофрмации о типе номеров по "room_id" для отеля '
-        '"hotel_id"'
+        'Частичное обновление инофрмации о типе номеров по "room_id" для '
+        '"отеля hotel_id"'
     )
 )
 async def update_hotel_room_partially(
@@ -228,5 +218,12 @@ async def update_hotel_room_partially(
         data=_room_data,
         exclude_unset=True
     )
+    new_facility_ids = room_data.facility_ids
+    if new_facility_ids:
+        await room_facilities_manager(
+            room_id=room_id,
+            new_facility_ids=new_facility_ids,
+            db=db
+        )
     await db.commit()
     return result

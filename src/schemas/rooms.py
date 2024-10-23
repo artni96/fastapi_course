@@ -153,6 +153,10 @@ class RoomPatchRequest(BaseModel):
         default=None,
         description='Количество'
     )
+    facility_ids: list[int] | None = Field(
+        default=None,
+        description='Список id удобств номера'
+    )
 
     class Config:
         schema_extra = {
