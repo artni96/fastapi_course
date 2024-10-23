@@ -52,11 +52,3 @@ class RoomsRepository(BaseRepository):
         return [
             RoomTestResponse.model_validate(room)
             for room in model_objs]
-
-    async def get_room_facilities(
-        self, room_id: int
-    ):
-        room_facility_ids = select(RoomFacilitiesModel.facility_id).where(
-            RoomFacilitiesModel.room_id == room_id)
-        result = await self.session.execute(room_facility_ids)
-        return result.scalars().all()

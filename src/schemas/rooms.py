@@ -164,7 +164,7 @@ class RoomPatchRequest(BaseModel):
                 'Изменение одного поля title': {
                     'summary': 'Изменение одного поля title',
                     'value': {
-                        'title': 'Новое название номера'
+                        'title': 'Новое название номера',
                     }
                 },
                 'Изменение полей price и quantity': {
@@ -174,14 +174,16 @@ class RoomPatchRequest(BaseModel):
                         'quantity': 5
                     }
                 },
-                'Изменение полей title, description, price и quantity': {
+                'Изменение полей title, description, price, quantity и '
+                'facility_ids': {
                     'summary': ('Изменение полей title, description, '
-                                'price и quantity'),
+                                'price, quantity и facility_ids'),
                     'value': {
                         'title': 'Новое название номера',
                         'description': 'Новое описание номера',
                         'price': 2000,
-                        'quantity': 7
+                        'quantity': 7,
+                        'facility_ids': [1, 2]
                     }
                 }
             }

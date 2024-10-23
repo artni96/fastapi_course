@@ -7,7 +7,6 @@ from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomInfo,
                                RoomPatch, RoomPatchRequest, RoomPut,
                                RoomPutRequest)
 from src.schemas.facilities import RoomFacilityAddRequest
-from src.utils.rooms import room_facilities_manager
 
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
@@ -183,10 +182,9 @@ async def update_hotel_room(
         exclude_unset=False
     )
     new_facility_ids = room_data.facility_ids
-    await room_facilities_manager(
+    await db.room_facilities.room_facility_manager(
         room_id=room_id,
-        new_facility_ids=new_facility_ids,
-        db=db
+        new_facility_ids=new_facility_ids
     )
     await db.commit()
     return result
@@ -220,10 +218,9 @@ async def update_hotel_room_partially(
     )
     new_facility_ids = room_data.facility_ids
     if new_facility_ids:
-        await room_facilities_manager(
-            room_id=room_id,
-            new_facility_ids=new_facility_ids,
-            db=db
+        await db.room_facilities.room_facility_manager(
+            room_id=room_data,
+            new_facility_ids=new_facility_ids
         )
     await db.commit()
     return result
