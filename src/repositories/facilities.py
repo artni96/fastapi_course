@@ -1,12 +1,15 @@
-from src.repositories.base import BaseRepository
-from src.models.facilities import FacilitiesMolel, RoomFacilitiesModel
-from src.schemas.facilities import FacilityResponse, RoomFacilityAddRequest
 from sqlalchemy import delete, insert, select
+
+from src.models.facilities import FacilitiesMolel, RoomFacilitiesModel
+from src.repositories.base import BaseRepository
+from src.repositories.mappers.mappers import FacilityDataMapper
+from src.schemas.facilities import FacilityResponse, RoomFacilityAddRequest
 
 
 class FacilitiesRepository(BaseRepository):
     model = FacilitiesMolel
-    schema = FacilityResponse
+    # schema = FacilityResponse
+    mapper = FacilityDataMapper
 
     async def get_filtered(
         self,
@@ -19,8 +22,12 @@ class FacilitiesRepository(BaseRepository):
                 .filter(self.model.title.icontains(title))
             )
         result = await self.session.execute(query)
+        # return [
+        #     self.schema.model_validate(model_obj, from_attributes=True)
+        #     for model_obj in result.scalars().all()
+        # ]
         return [
-            self.schema.model_validate(model_obj, from_attributes=True)
+            self.mapper.map_to_domain_entity(model_obj)
             for model_obj in result.scalars().all()
         ]
 

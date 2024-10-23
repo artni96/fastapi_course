@@ -118,6 +118,7 @@ async def get_filtered_hotel_room_by_date(
 )
 async def get_rooms_by_date(
     *,
+    hotel_id: int,
     room_id: int,
     date_from: date | str = Query(example='18.10.2024'),
     date_to: date | str = Query(example='21.10.2024'),
@@ -132,7 +133,8 @@ async def get_rooms_by_date(
     room = await db.rooms.get_room_with_avaliable_rooms_number(
         room_id=room_id,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
+        hotel_id=hotel_id
     )
     return room
 

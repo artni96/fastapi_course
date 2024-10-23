@@ -3,7 +3,7 @@ from datetime import date, datetime
 from fastapi import APIRouter, Body, Query, HTTPException
 
 from src.api.dependencies import DBDep, PaginationDep
-from src.schemas.hotels import Hotel, HotelAddPut, HotelPatch
+from src.schemas.hotels import HotelResponse, HotelAddPut, HotelPatch
 
 hotels_router = APIRouter(prefix='/hotels', tags=['Отели',])
 
@@ -25,7 +25,7 @@ async def get_hotels(
         default=None,
         description='Расположение'
     ),
-) -> list[Hotel] | str | None:
+) -> list[HotelResponse] | str | None:
     try:
         date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
         date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
@@ -74,7 +74,7 @@ async def delete_hotel(
 async def post_hotel(
     *,
     hotel_data: HotelAddPut = Body(
-        openapi_examples=Hotel.Config.schema_extra['examples'],
+        openapi_examples=HotelResponse.Config.schema_extra['examples'],
     ),
     db: DBDep
 ):
@@ -92,7 +92,7 @@ async def update_hotel(
     hotel_id: int,
     hotel_data: HotelAddPut,
     db: DBDep
-) -> Hotel:
+) -> HotelResponse:
     result = await db.hotels.change(id=hotel_id, data=hotel_data)
     await db.commit()
     return result
@@ -106,7 +106,7 @@ async def update_hotel_partially(
     hotel_id: int,
     hotel_data: HotelPatch,
     db: DBDep
-) -> Hotel:
+) -> HotelResponse:
     result = await db.hotels.change(
         id=hotel_id,
         exclude_unset=True,

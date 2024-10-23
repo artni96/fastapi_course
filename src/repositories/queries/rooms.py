@@ -66,7 +66,8 @@ def common_response_with_filtered_hotel_room_ids_by_date(
     )
 
     if hotel_id is not None:
-        avaliable_room_ids = avaliable_room_ids.where(booked_rooms.c.id.in_(hotel_room_ids_list))
+        avaliable_room_ids = avaliable_room_ids.where(
+            booked_rooms.c.id.in_(hotel_room_ids_list))
 
     # print(avaliable_rooms_id.compile(
     #     bind=engine, compile_kwargs={'literal_binds': True}))
@@ -84,9 +85,9 @@ def get_avaliable_rooms_number(
         date_to=date_to
     )
     if room_id is not None:
-        result = booked_rooms.where(
+        result = booked_rooms.filter(
             RoomsModel.id == room_id)
     if hotel_id is not None:
-        result = booked_rooms.where(
+        result = booked_rooms.filter(
             RoomsModel.hotel_id == hotel_id)
     return result

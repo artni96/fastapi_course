@@ -1,19 +1,22 @@
 from datetime import date
-from src.db import engine
+
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload, selectinload
+
 from src.models.rooms import RoomsModel
 from src.repositories.base import BaseRepository
+from src.repositories.mappers.mappers import RoomDataMapper
 from src.repositories.queries.rooms import (
     common_response_with_filtered_hotel_room_ids_by_date,
     get_avaliable_rooms_number)
-from src.schemas.rooms import RoomExtendedResponse
-from sqlalchemy import select
-from src.schemas.rooms import RoomWithFacilitiesResponse
-from sqlalchemy.orm import selectinload, joinedload
+from src.repositories.utils import rooms_ids_for_booking
+from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsModel
     schema = RoomWithFacilitiesResponse
+    mapper = RoomDataMapper
 
     async def get_rooms_by_date(
             self,
@@ -21,24 +24,21 @@ class RoomsRepository(BaseRepository):
             date_to: date,
             hotel_id: int
     ):
-        avaliable_rooms_id = (
-            common_response_with_filtered_hotel_room_ids_by_date(
-                date_from=date_from,
-                date_to=date_to,
-                hotel_id=hotel_id
-            )
-        )
+        rooms_ids_to_get = rooms_ids_for_booking(date_from, date_to, hotel_id)
 
         query = (
             select(self.model)
             .options(selectinload(self.model.facilities))
-            .filter(self.model.id.in_(avaliable_rooms_id))
+            .filter(self.model.id.in_(rooms_ids_to_get))
         )
         result = await self.session.execute(query)
         model_objs = result.unique().scalars().all()
-
+        # return [
+        #     self.schema.model_validate(model)
+        #     for model in model_objs
+        # ]
         return [
-            self.schema.model_validate(model)
+            self.mapper.map_to_domain_entity(model)
             for model in model_objs
         ]
 
@@ -57,8 +57,6 @@ class RoomsRepository(BaseRepository):
                 hotel_id=hotel_id
             )
         )
-        # print(avaliable_rooms_amount.compile(
-        #     bind=engine, compile_kwargs={'literal_binds': True}))
 
         result = await self.session.execute(avaliable_rooms_amount)
         model_objs = result.mappings().all()
@@ -75,6 +73,9 @@ class RoomsRepository(BaseRepository):
         result = await self.session.execute(query)
         model_obj = result.unique().scalars().one_or_none()
         if model_obj is not None:
-            return self.schema.model_validate(
-                model_obj, from_attributes=True
+            # return self.schema.model_validate(
+            #     model_obj, from_attributes=True
+            # )
+            return self.mapper.map_to_domain_entity(
+                model_obj
             )

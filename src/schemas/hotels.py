@@ -39,7 +39,7 @@ class HotelAddPut(BaseModel):
         }
 
 
-class Hotel(HotelAddPut):
+class HotelResponse(HotelAddPut):
     id: int
 
 
