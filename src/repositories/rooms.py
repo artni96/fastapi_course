@@ -10,7 +10,8 @@ from src.repositories.queries.rooms import (
     common_response_with_filtered_hotel_room_ids_by_date,
     get_avaliable_rooms_number)
 from src.repositories.utils import rooms_ids_for_booking
-from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse
+from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse, RoomExtenedeTestResponse
+from src.repositories.utils import extended_room_response
 
 
 class RoomsRepository(BaseRepository):
@@ -79,3 +80,22 @@ class RoomsRepository(BaseRepository):
             return self.mapper.map_to_domain_entity(
                 model_obj
             )
+
+    async def test_extended_response(
+        self,
+        date_from: date,
+        date_to: date,
+        room_id: int
+    ):
+        pass
+        query = extended_room_response(
+            date_from=date_from,
+            date_to=date_to,
+            room_id=room_id
+        )
+        result = await self.session.execute(query)
+        models_obj = result.mappings().all()
+        return models_obj
+        return [
+            RoomExtenedeTestResponse.model_validate(model_obj, from_attributes=True) for model_obj in models_obj
+        ]

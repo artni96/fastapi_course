@@ -227,3 +227,23 @@ async def update_hotel_room_partially(
             )
         await db.commit()
     return result
+
+
+@rooms_router.get('/{hotel_id}/rooms-test/{room_id}')
+async def test_123(
+    *,
+    date_from: date | str = Query(example='18.10.2024'),
+    date_to: date | str = Query(example='21.10.2024'),
+    room_id: int,
+    db: DBDep
+):
+    try:
+        date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+        date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+    except ValueError:
+        return 'Укажите даты в формате dd.mm.yyyy'
+    return await db.rooms.test_extended_response(
+        date_from=date_from,
+        date_to=date_to,
+        room_id=room_id
+    )

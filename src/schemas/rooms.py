@@ -210,3 +210,25 @@ class RoomExtendedResponse(RoomInfo):
     price: int = Field(
         description='цена за сутки'
     )
+
+
+class RoomExtenedeTestResponse(BaseModel):
+    id: int
+    facilities: list[FacilityResponse]
+    hotel_id: int = Field(
+        description='id отеля'
+    )
+    # title: str = Field(
+    #     description='Название'
+    # )
+    # description: str = Field(
+    #     description='Описание номера'
+    # )
+    # price: int = Field(
+    #     description='цена за сутки'
+    # )
+    # quantity: int = Field(
+    #     description='Количество'
+    # )
+
+    # model_config = ConfigDict(from_attributes=True)
