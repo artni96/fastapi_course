@@ -96,6 +96,3 @@ class RoomsRepository(BaseRepository):
         result = await self.session.execute(query)
         models_obj = result.mappings().all()
         return models_obj
-        return [
-            RoomExtenedeTestResponse.model_validate(model_obj, from_attributes=True) for model_obj in models_obj
-        ]

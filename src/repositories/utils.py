@@ -63,7 +63,7 @@ def rooms_ids_for_booking(
 def extended_room_response(
     date_from: date,
     date_to: date,
-    hotel_id: int | None = None,
+    # hotel_id: int | None = None,
     room_id: int | None = None,
 ):
     booked_rooms_amount_by_date = (
@@ -72,12 +72,13 @@ def extended_room_response(
         .filter(
             BookingModel.date_from <= date_to,
             BookingModel.date_to >= date_from,
+            BookingModel.room_id == room_id
         )
         .group_by(BookingModel.room_id)
         .cte(name='booked_rooms_amount_by_date')
     )
 
-    avaliable_rooms_table = (
+    extended_rooms_info_table = (
         select(
             RoomsModel.id.label('room_id'),
             booked_rooms_amount_by_date.c.booked_rooms.label('booked_rooms'),
@@ -87,26 +88,15 @@ def extended_room_response(
         )
         .select_from(RoomsModel)
         .outerjoin(
-            booked_rooms_amount_by_date,
-            RoomsModel.id == booked_rooms_amount_by_date.c.room_id
+            RoomsModel,
+            booked_rooms_amount_by_date.c.room_id == RoomsModel.id
         )
-    ).cte('avaliable_rooms_table')
-    rooms_with_facilities = (
-        select(
-            RoomsModel
-        )
-        # .outerjoin(
-        #     avaliable_rooms_table,
-        #     RoomsModel.id == avaliable_rooms_table.c.room_id)
-        .options(
-            # avaliable_rooms_table.c.avaliable_rooms
-        # ),
-            joinedload(RoomsModel.facilities))
-        .filter(RoomsModel.id == room_id)
-    ).cte('rooms_with_facilities')
-    result = select(rooms_with_facilities.c.id, rooms_with_facilities.c.facilities, avaliable_rooms_table.c.avaliable_rooms).outerjoin(
-            avaliable_rooms_table,
-            rooms_with_facilities.c.id == avaliable_rooms_table.c.room_id)
-    print(rooms_with_facilities.compile(
+    ).cte('extended_rooms_info_table')
+    avaliable_rooms_with_facilities_table = (
+        select(extended_rooms_info_table, RoomsModel)
+        .outerjoin(
+            RoomsModel, RoomsModel.id == extended_rooms_info_table.c.room_id)
+        .options(selectinload(RoomsModel.facilities))
+    )
+    print(avaliable_rooms_with_facilities_table.compile(
         bind=engine, compile_kwargs={'literal_binds': True}))
-    return result

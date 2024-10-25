@@ -229,8 +229,8 @@ async def update_hotel_room_partially(
     return result
 
 
-@rooms_router.get('/{hotel_id}/rooms-test/{room_id}')
-async def test_123(
+@rooms_router.get('/{hotel_id}/roomsextended-test/{room_id}')
+async def get_avaliable_rooms(
     *,
     date_from: date | str = Query(example='18.10.2024'),
     date_to: date | str = Query(example='21.10.2024'),
