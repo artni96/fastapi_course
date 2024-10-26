@@ -10,13 +10,14 @@ from src.repositories.queries.rooms import (
     common_response_with_filtered_hotel_room_ids_by_date,
     get_avaliable_rooms_number)
 from src.repositories.utils import rooms_ids_for_booking
-from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse, RoomExtenedeTestResponse
+from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse, RoomExtendedTestResponse
 from src.repositories.utils import extended_room_response
+from src.schemas.facilities import FacilityResponse
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsModel
-    schema = RoomWithFacilitiesResponse
+    # schema = RoomWithFacilitiesResponse
     mapper = RoomDataMapper
 
     async def get_rooms_by_date(
@@ -93,6 +94,19 @@ class RoomsRepository(BaseRepository):
             date_to=date_to,
             room_id=room_id
         )
-        result = await self.session.execute(query)
-        models_obj = result.mappings().all()
-        return models_obj
+        extended_rooms_info_table_result = await self.session.execute(
+            query['extended_rooms_info_table'])
+        rooms_facilities = await self.session.execute(
+            query['room_facilities']
+        )
+        mapped_rooms_objs = extended_rooms_info_table_result.mappings().one_or_none()
+        mapped_rooms_facilities_objs = rooms_facilities.mappings().one_or_none()
+        result = RoomExtendedTestResponse(
+            # id=mapped_rooms_objs.room_id,
+            hotel_id=mapped_rooms_objs.hotel_id,
+            quantity=mapped_rooms_objs.quantity,
+            booked_rooms=mapped_rooms_objs.booked_rooms,
+            avaliable_rooms=mapped_rooms_objs.avaliable_rooms,
+            )
+        result.facilities = list(FacilityResponse.model_validate(mapped_rooms_facilities_objs, from_attributes=True))
+        return result

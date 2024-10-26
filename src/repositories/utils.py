@@ -81,22 +81,31 @@ def extended_room_response(
     extended_rooms_info_table = (
         select(
             RoomsModel.id.label('room_id'),
+            RoomsModel.hotel_id.label('hotel_id'),
+            RoomsModel.quantity,
             booked_rooms_amount_by_date.c.booked_rooms.label('booked_rooms'),
             (RoomsModel.quantity - func.coalesce(
                 booked_rooms_amount_by_date.c.booked_rooms, 0)).label(
                     'avaliable_rooms'),
         )
-        .select_from(RoomsModel)
+        .select_from(booked_rooms_amount_by_date)
         .outerjoin(
             RoomsModel,
             booked_rooms_amount_by_date.c.room_id == RoomsModel.id
         )
-    ).cte('extended_rooms_info_table')
-    avaliable_rooms_with_facilities_table = (
-        select(extended_rooms_info_table, RoomsModel)
-        .outerjoin(
-            RoomsModel, RoomsModel.id == extended_rooms_info_table.c.room_id)
-        .options(selectinload(RoomsModel.facilities))
     )
-    print(avaliable_rooms_with_facilities_table.compile(
-        bind=engine, compile_kwargs={'literal_binds': True}))
+    room_facilities = (
+        select(RoomsModel)
+        .filter(RoomsModel.id == room_id)
+        .options(
+            load_only(RoomsModel.id)
+            .selectinload(RoomsModel.facilities))
+    )
+    # print(avaliable_rooms_with_facilities_table.compile(
+    #     bind=engine, compile_kwargs={'literal_binds': True}))
+    # result = [extended_rooms_info_table, room_facilities]
+    result = {
+        'extended_rooms_info_table': extended_rooms_info_table,
+        'room_facilities': room_facilities
+    }
+    return result
