@@ -82,31 +82,46 @@ class RoomsRepository(BaseRepository):
                 model_obj
             )
 
-    async def test_extended_response(
+    async def extended_room_response(
         self,
         date_from: date,
         date_to: date,
-        room_id: int
+        room_id: int,
+        hotel_id: int
     ):
         pass
         query = extended_room_response(
             date_from=date_from,
             date_to=date_to,
-            room_id=room_id
+            room_id=room_id,
+            hotel_id=hotel_id
         )
-        extended_rooms_info_table_result = await self.session.execute(
-            query['extended_rooms_info_table'])
+        booked_and_avaliable_rooms_info_table = await self.session.execute(
+            query['booked_and_avaliable_rooms_info_table'])
         rooms_facilities = await self.session.execute(
             query['room_facilities']
         )
-        mapped_rooms_objs = extended_rooms_info_table_result.mappings().one_or_none()
-        mapped_rooms_facilities_objs = rooms_facilities.mappings().one_or_none()
+        mapped_room_obj = booked_and_avaliable_rooms_info_table.mappings().one_or_none()
+        mapped_room_facilities_objs = rooms_facilities.scalars().one_or_none()
+        if not mapped_room_obj:
+            booked_rooms = 0
+            avaliable_rooms = mapped_room_facilities_objs.quantity
+        else:
+            booked_rooms = mapped_room_obj.booked_rooms
+            avaliable_rooms = mapped_room_obj.avaliable_rooms
+        if not mapped_room_facilities_objs:
+            return {
+                'status': 'Room with given room_id in the hotel has not found'
+            }
         result = RoomExtendedTestResponse(
-            # id=mapped_rooms_objs.room_id,
-            hotel_id=mapped_rooms_objs.hotel_id,
-            quantity=mapped_rooms_objs.quantity,
-            booked_rooms=mapped_rooms_objs.booked_rooms,
-            avaliable_rooms=mapped_rooms_objs.avaliable_rooms,
+            room_id=mapped_room_facilities_objs.id,
+            hotel_id=mapped_room_facilities_objs.hotel_id,
+            title=mapped_room_facilities_objs.title,
+            description=mapped_room_facilities_objs.description,
+            price=mapped_room_facilities_objs.price,
+            quantity=mapped_room_facilities_objs.quantity,
+            booked_rooms=booked_rooms,
+            avaliable_rooms=avaliable_rooms,
+            facilities=mapped_room_facilities_objs.facilities
             )
-        result.facilities = list(FacilityResponse.model_validate(mapped_rooms_facilities_objs, from_attributes=True))
         return result

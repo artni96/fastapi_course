@@ -118,10 +118,11 @@ async def get_filtered_hotel_room_by_date(
 )
 async def get_rooms_by_date(
     *,
-    hotel_id: int,
-    room_id: int,
     date_from: date | str = Query(example='18.10.2024'),
     date_to: date | str = Query(example='21.10.2024'),
+    hotel_id: int,
+    room_id: int,
+
     db: DBDep
 ):
     try:
@@ -129,14 +130,12 @@ async def get_rooms_by_date(
         date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
     except ValueError:
         return 'Укажите даты в формате dd.mm.yyyy'
-
-    room = await db.rooms.get_room_with_avaliable_rooms_number(
-        room_id=room_id,
+    return await db.rooms.extended_room_response(
         date_from=date_from,
         date_to=date_to,
+        room_id=room_id,
         hotel_id=hotel_id
     )
-    return room
 
 
 @rooms_router.delete(
@@ -229,21 +228,24 @@ async def update_hotel_room_partially(
     return result
 
 
-@rooms_router.get('/{hotel_id}/roomsextended-test/{room_id}')
-async def get_avaliable_rooms(
-    *,
-    date_from: date | str = Query(example='18.10.2024'),
-    date_to: date | str = Query(example='21.10.2024'),
-    room_id: int,
-    db: DBDep
-):
-    try:
-        date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
-        date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
-    except ValueError:
-        return 'Укажите даты в формате dd.mm.yyyy'
-    return await db.rooms.test_extended_response(
-        date_from=date_from,
-        date_to=date_to,
-        room_id=room_id
-    )
+# @rooms_router.get('/{hotel_id}/roomsextended-test/{room_id}')
+# async def get_avaliable_rooms(
+#     *,
+#     date_from: date | str = Query(example='18.10.2024'),
+#     date_to: date | str = Query(example='21.10.2024'),
+#     hotel_id: int,
+#     room_id: int,
+
+#     db: DBDep
+# ):
+#     try:
+#         date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+#         date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+#     except ValueError:
+#         return 'Укажите даты в формате dd.mm.yyyy'
+#     return await db.rooms.extended_room_response(
+#         date_from=date_from,
+#         date_to=date_to,
+#         room_id=room_id,
+#         hotel_id=hotel_id
+#     )

@@ -213,27 +213,26 @@ class RoomExtendedResponse(RoomInfo):
 
 
 class RoomExtendedTestResponse(BaseModel):
-    id: int | None = None
-    facilities: list[FacilityResponse] | None = None
     hotel_id: int | None = Field(
         default=None,
         description='id отеля'
     )
-    # title: str = Field(
-    #     description='Название'
-    # )
-    # description: str = Field(
-    #     description='Описание номера'
-    # )
-    # price: int = Field(
-    #     description='цена за сутки'
-    # )
-    quantity: int | None = Field(
+    room_id: int | None = None
+    title: str = Field(
+        description='Название'
+    )
+    description: str = Field(
+        description='Описание номера'
+    )
+    price: int = Field(
+        description='цена за сутки'
+    )
+    quantity: int = Field(
         default=None,
         description='Количество'
     )
-    booked_rooms: int | None = None
-    avaliable_rooms: int | None = None
-    # test_field: str
+    booked_rooms: int
+    avaliable_rooms: int
 
     model_config = ConfigDict(from_attributes=True)
+    facilities: list[FacilityResponse] | None = None

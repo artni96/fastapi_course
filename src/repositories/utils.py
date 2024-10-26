@@ -63,11 +63,11 @@ def rooms_ids_for_booking(
 def extended_room_response(
     date_from: date,
     date_to: date,
-    # hotel_id: int | None = None,
+    hotel_id: int | None = None,
     room_id: int | None = None,
 ):
     booked_rooms_amount_by_date = (
-        select(BookingModel.room_id, func.count('*').label('booked_rooms'))
+        select(BookingModel.room_id, func.coalesce(func.count('*'), 0).label('booked_rooms'))
         .select_from(BookingModel)
         .filter(
             BookingModel.date_from <= date_to,
@@ -78,15 +78,12 @@ def extended_room_response(
         .cte(name='booked_rooms_amount_by_date')
     )
 
-    extended_rooms_info_table = (
+    booked_and_avaliable_rooms_info_table = (
         select(
-            RoomsModel.id.label('room_id'),
-            RoomsModel.hotel_id.label('hotel_id'),
-            RoomsModel.quantity,
             booked_rooms_amount_by_date.c.booked_rooms.label('booked_rooms'),
             (RoomsModel.quantity - func.coalesce(
-                booked_rooms_amount_by_date.c.booked_rooms, 0)).label(
-                    'avaliable_rooms'),
+                booked_rooms_amount_by_date.c.booked_rooms, 0))
+            .label('avaliable_rooms'),
         )
         .select_from(booked_rooms_amount_by_date)
         .outerjoin(
@@ -96,16 +93,29 @@ def extended_room_response(
     )
     room_facilities = (
         select(RoomsModel)
-        .filter(RoomsModel.id == room_id)
+        .filter(
+            RoomsModel.id == room_id,
+            RoomsModel.hotel_id == hotel_id
+           )
+        .select_from(RoomsModel)
         .options(
-            load_only(RoomsModel.id)
+            load_only(
+                RoomsModel.id,
+                RoomsModel.hotel_id,
+                RoomsModel.title,
+                RoomsModel.description,
+                RoomsModel.price,
+                RoomsModel.quantity
+            )
             .selectinload(RoomsModel.facilities))
     )
     # print(avaliable_rooms_with_facilities_table.compile(
     #     bind=engine, compile_kwargs={'literal_binds': True}))
     # result = [extended_rooms_info_table, room_facilities]
     result = {
-        'extended_rooms_info_table': extended_rooms_info_table,
+        'booked_and_avaliable_rooms_info_table': (
+            booked_and_avaliable_rooms_info_table
+        ),
         'room_facilities': room_facilities
     }
     return result
