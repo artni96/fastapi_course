@@ -7,7 +7,7 @@ from src.db import engine
 
 class BaseRepository:
     model = None
-    # schema: BaseModel = None
+    schema: BaseModel = None
     mapper: DataMapper = None
 
     def __init__(
@@ -58,9 +58,9 @@ class BaseRepository:
         )
         result = await self.session.execute(new_data_stmt)
         new_model_obj = result.scalars().one()
-        # return self.schema.model_validate(
-        #     new_model_obj,
-        #     from_attributes=True)
+        return self.schema.model_validate(
+            new_model_obj,
+            from_attributes=True)
         return self.mapper.map_to_domain_entity(new_model_obj)
 
     async def add_bulk(self, data: list[BaseModel]):
@@ -83,8 +83,8 @@ class BaseRepository:
         result = await self.session.execute(query)
         try:
             model_obj = result.scalars().one()
-            # return self.schema.model_validate(model_obj, from_attributes=True)
-            return self.mapper.map_to_domain_entity(model_obj)
+            return self.schema.model_validate(model_obj, from_attributes=True)
+            # return self.mapper.map_to_domain_entity(model_obj)
         except NoResultFound:
             return {'status': 'NOT FOUND'}
 

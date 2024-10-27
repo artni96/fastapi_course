@@ -119,3 +119,63 @@ def extended_room_response(
         'room_facilities': room_facilities
     }
     return result
+
+
+def extended_rooms_response(
+    date_from: date,
+    date_to: date,
+    rooms_id: list[int] | None = None,
+):
+    booked_rooms_amount_by_date = (
+        select(BookingModel.room_id, func.coalesce(func.count('*'), 0).label('booked_rooms'))
+        .select_from(BookingModel)
+        .filter(
+            BookingModel.date_from <= date_to,
+            BookingModel.date_to >= date_from,
+            BookingModel.room_id.in_(rooms_id)
+        )
+        .group_by(BookingModel.room_id)
+        .cte(name='booked_rooms_amount_by_date_1')
+    )
+
+    booked_and_avaliable_rooms_info_table = (
+        select(
+            booked_rooms_amount_by_date.c.room_id.label('room_id'),
+            booked_rooms_amount_by_date.c.booked_rooms.label('booked_rooms'),
+            (RoomsModel.quantity - func.coalesce(
+                booked_rooms_amount_by_date.c.booked_rooms, 0))
+            .label('avaliable_rooms'),
+        )
+        .select_from(booked_rooms_amount_by_date)
+        .outerjoin(
+            RoomsModel,
+            booked_rooms_amount_by_date.c.room_id == RoomsModel.id
+        )
+    )
+    rooms_facilities = (
+        select(RoomsModel)
+        .filter(
+            RoomsModel.id.in_(rooms_id),
+           )
+        .select_from(RoomsModel)
+        .options(
+            load_only(
+                RoomsModel.id,
+                RoomsModel.hotel_id,
+                RoomsModel.title,
+                RoomsModel.description,
+                RoomsModel.price,
+                RoomsModel.quantity
+            )
+            .selectinload(RoomsModel.facilities))
+    )
+    # print(rooms_facilities.compile(
+    #     bind=engine, compile_kwargs={'literal_binds': True}))
+    # result = [extended_rooms_info_table, room_facilities]
+    result = {
+        'booked_and_avaliable_rooms_info_table': (
+            booked_and_avaliable_rooms_info_table
+        ),
+        'rooms_facilities': rooms_facilities
+    }
+    return result

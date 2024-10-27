@@ -10,14 +10,15 @@ from src.repositories.queries.rooms import (
     common_response_with_filtered_hotel_room_ids_by_date,
     get_avaliable_rooms_number)
 from src.repositories.utils import rooms_ids_for_booking
-from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse, RoomExtendedTestResponse
-from src.repositories.utils import extended_room_response
+from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse, RoomExtendedTestResponse, RoomInfo
+from src.repositories.utils import extended_room_response, extended_rooms_response
 from src.schemas.facilities import FacilityResponse
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsModel
     # schema = RoomWithFacilitiesResponse
+    schema = RoomInfo
     mapper = RoomDataMapper
 
     async def get_rooms_by_date(
@@ -89,19 +90,20 @@ class RoomsRepository(BaseRepository):
         room_id: int,
         hotel_id: int
     ):
-        pass
-        query = extended_room_response(
+        queries = extended_room_response(
             date_from=date_from,
             date_to=date_to,
             room_id=room_id,
             hotel_id=hotel_id
         )
         booked_and_avaliable_rooms_info_table = await self.session.execute(
-            query['booked_and_avaliable_rooms_info_table'])
+            queries['booked_and_avaliable_rooms_info_table'])
         rooms_facilities = await self.session.execute(
-            query['room_facilities']
+            queries['room_facilities']
         )
-        mapped_room_obj = booked_and_avaliable_rooms_info_table.mappings().one_or_none()
+        mapped_room_obj = (
+            booked_and_avaliable_rooms_info_table.mappings().one_or_none()
+        )
         mapped_room_facilities_objs = rooms_facilities.scalars().one_or_none()
         if not mapped_room_obj:
             booked_rooms = 0
@@ -125,3 +127,36 @@ class RoomsRepository(BaseRepository):
             facilities=mapped_room_facilities_objs.facilities
             )
         return result
+
+    async def extended_rooms_response_manager(
+            self,
+            date_from: date,
+            date_to: date,
+            hotel_id: int
+    ):
+        rooms_ids_to_get = rooms_ids_for_booking(
+            date_from=date_from,
+            date_to=date_to,
+            hotel_id=hotel_id
+        )
+        queries = extended_rooms_response(
+            date_from=date_from,
+            date_to=date_to,
+            rooms_id=rooms_ids_to_get
+        )
+        booked_and_avaliable_rooms_info_table = await self.session.execute(
+            queries['booked_and_avaliable_rooms_info_table']
+        )
+        rooms_facilities = await self.session.execute(
+            queries['rooms_facilities']
+        )
+        mapped_rooms_obj = (
+            booked_and_avaliable_rooms_info_table.mappings().all()
+        )
+        mapped_room_facilities_objs = rooms_facilities.scalars().all()
+        for obj in mapped_rooms_obj:
+            print(obj)
+        for obj in mapped_room_facilities_objs:
+            print(obj.id)
+        print(mapped_rooms_obj.facilities)
+        print(mapped_room_facilities_objs)
