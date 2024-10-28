@@ -7,11 +7,10 @@ from src.models.rooms import RoomsModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import (RoomDataMapper,
                                               RoomDataWithFacilitiesMapper)
-from src.repositories.queries.rooms import get_avaliable_rooms_number
-from src.repositories.utils import (extended_room_response,
-                                    extended_rooms_response,
-                                    rooms_ids_for_booking)
-from src.schemas.rooms import RoomExtendedResponse, RoomExtendedTestResponse
+from src.repositories.utils.rooms import (extended_room_response,
+                                          extended_rooms_response,
+                                          rooms_ids_for_booking)
+from src.schemas.rooms import RoomExtendedResponse
 
 
 class RoomsRepository(BaseRepository):
@@ -38,28 +37,6 @@ class RoomsRepository(BaseRepository):
             for model in model_objs
         ]
 
-    async def get_room_with_avaliable_rooms_number(
-            self,
-            date_from: date,
-            date_to: date,
-            room_id: int | None = None,
-            hotel_id: int | None = None
-    ):
-        avaliable_rooms_amount = (
-            get_avaliable_rooms_number(
-                date_from=date_from,
-                date_to=date_to,
-                room_id=room_id,
-                hotel_id=hotel_id
-            )
-        )
-
-        result = await self.session.execute(avaliable_rooms_amount)
-        model_objs = result.mappings().all()
-        return [
-            RoomExtendedResponse.model_validate(room)
-            for room in model_objs]
-
     async def get_one_or_none(self, hotel_id: int, id: int):
         query = (
             select(self.model)
@@ -80,6 +57,8 @@ class RoomsRepository(BaseRepository):
         room_id: int,
         hotel_id: int
     ):
+        '''Предоставление подробной информации о номере room_id
+             в указанный период.'''
         queries = extended_room_response(
             date_from=date_from,
             date_to=date_to,
@@ -105,8 +84,8 @@ class RoomsRepository(BaseRepository):
             return {
                 'status': 'Room with given room_id in the hotel has not found'
             }
-        result = RoomExtendedTestResponse(
-            room_id=mapped_room_facilities_objs.id,
+        result = RoomExtendedResponse(
+            id=mapped_room_facilities_objs.id,
             hotel_id=mapped_room_facilities_objs.hotel_id,
             title=mapped_room_facilities_objs.title,
             description=mapped_room_facilities_objs.description,
@@ -124,6 +103,8 @@ class RoomsRepository(BaseRepository):
             date_to: date,
             hotel_id: int
     ):
+        '''Предоставление списка с подробной информацией о номерах отеля
+             hotel_id в указанный период.'''
         rooms_ids_to_get = rooms_ids_for_booking(
             date_from=date_from,
             date_to=date_to,
@@ -140,13 +121,34 @@ class RoomsRepository(BaseRepository):
         rooms_facilities = await self.session.execute(
             queries['rooms_info_with_facilities']
         )
-        mapped_rooms_obj = (
+        mapped_rooms_objs = (
             booked_and_avaliable_rooms_info_table.mappings().all()
         )
         mapped_room_facilities_objs = rooms_facilities.scalars().all()
-        for obj in mapped_rooms_obj:
-            print(obj)
+        result = list()
         for obj in mapped_room_facilities_objs:
-            print(obj.id)
-        print(mapped_rooms_obj.facilities)
-        print(mapped_room_facilities_objs)
+            for i in range(len(mapped_rooms_objs)):
+                current_obj = RoomExtendedResponse(
+                    id=obj.id,
+                    hotel_id=obj.hotel_id,
+                    title=obj.title,
+                    description=obj.description,
+                    price=obj.price,
+                    quantity=obj.quantity,
+                    facilities=obj.facilities
+                )
+                if (len(mapped_rooms_objs) > 0 and
+                        obj.id == mapped_rooms_objs[i].room_id):
+                    current_obj.booked_rooms = (
+                        mapped_rooms_objs[i].booked_rooms
+                    )
+                    current_obj.avaliable_rooms = (
+                        mapped_rooms_objs[i].avaliable_rooms
+                    )
+                    result.append(current_obj)
+                    mapped_rooms_objs.pop(i)
+                else:
+                    current_obj.booked_rooms = 0
+                    current_obj.avaliable_rooms = obj.quantity
+                    result.append(current_obj)
+        return result

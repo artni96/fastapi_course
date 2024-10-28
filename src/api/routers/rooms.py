@@ -101,18 +101,12 @@ async def get_filtered_hotel_room_by_date(
     except ValueError:
         return 'Укажите даты в формате dd.mm.yyyy'
 
-    # room = await db.rooms.get_room_with_avaliable_rooms_number(
-    #     # room_id=room_id,
-    #     date_from=date_from,
-    #     date_to=date_to,
-    #     hotel_id=hotel_id
-    # )
     result = await db.rooms.extended_rooms_response_manager(
         date_from=date_from,
         date_to=date_to,
         hotel_id=hotel_id
     )
-    print(result)
+    return result
 
 
 @rooms_router.get(

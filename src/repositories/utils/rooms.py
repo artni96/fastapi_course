@@ -109,9 +109,6 @@ def extended_room_response(
             )
             .selectinload(RoomsModel.facilities))
     )
-    # print(avaliable_rooms_with_facilities_table.compile(
-    #     bind=engine, compile_kwargs={'literal_binds': True}))
-    # result = [extended_rooms_info_table, room_facilities]
     result = {
         'booked_and_avaliable_rooms_info_table': (
             booked_and_avaliable_rooms_info_table
@@ -169,9 +166,6 @@ def extended_rooms_response(
             )
             .selectinload(RoomsModel.facilities))
     )
-    # print(rooms_facilities.compile(
-    #     bind=engine, compile_kwargs={'literal_binds': True}))
-    # result = [extended_rooms_info_table, room_facilities]
     result = {
         'booked_and_avaliable_rooms_info_table': (
             booked_and_avaliable_rooms_info_table
