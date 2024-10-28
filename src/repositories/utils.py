@@ -152,7 +152,7 @@ def extended_rooms_response(
             booked_rooms_amount_by_date.c.room_id == RoomsModel.id
         )
     )
-    rooms_facilities = (
+    rooms_info_with_facilities = (
         select(RoomsModel)
         .filter(
             RoomsModel.id.in_(rooms_id),
@@ -176,6 +176,6 @@ def extended_rooms_response(
         'booked_and_avaliable_rooms_info_table': (
             booked_and_avaliable_rooms_info_table
         ),
-        'rooms_facilities': rooms_facilities
+        'rooms_info_with_facilities': rooms_info_with_facilities
     }
     return result

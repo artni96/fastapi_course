@@ -4,8 +4,10 @@ from fastapi import APIRouter, Body, Path, Query
 
 from src.api.dependencies import DBDep
 from src.schemas.facilities import RoomFacilityAddRequest
-from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomPatch,
-                               RoomPatchRequest, RoomPut, RoomPutRequest)
+from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomInfo,
+                               RoomPatch, RoomPatchRequest, RoomPut,
+                               RoomPutRequest)
+
 
 rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
 
@@ -49,7 +51,7 @@ async def create_room(
     db: DBDep
 ):
     _room_data = RoomCreate(hotel_id=hotel_id, **room_data.model_dump())
-    room = await db.rooms.add(data=_room_data)
+    room: RoomInfo = await db.rooms.add(data=_room_data)
     facilities = [
         RoomFacilityAddRequest(room_id=room.id, facility_id=facility_id)
         for facility_id in room_data.facility_ids
@@ -57,7 +59,7 @@ async def create_room(
     await db.room_facilities.add_bulk(data=facilities)
 
     await db.commit()
-    return room
+    return await db.rooms.get_one_or_none(hotel_id=room.hotel_id, id=room.id)
 
 
 @rooms_router.get(
@@ -186,7 +188,7 @@ async def update_hotel_room(
         exclude_unset=False
     )
     new_facility_ids = room_data.facility_ids
-    await db.room_facilities.room_facility_manager(
+    await db.room_facilities.room_facility_creator(
         room_id=room_id,
         new_facility_ids=new_facility_ids
     )
@@ -224,32 +226,9 @@ async def update_hotel_room_partially(
     new_facility_ids = room_data.facility_ids
     if new_facility_ids:
         if new_facility_ids:
-            await db.room_facilities.room_facility_manager(
+            await db.room_facilities.room_facility_creator(
                 room_id=room_id,
                 new_facility_ids=new_facility_ids
             )
         await db.commit()
     return result
-
-
-# @rooms_router.get('/{hotel_id}/roomsextended-test/{room_id}')
-# async def get_avaliable_rooms(
-#     *,
-#     date_from: date | str = Query(example='18.10.2024'),
-#     date_to: date | str = Query(example='21.10.2024'),
-#     hotel_id: int,
-#     room_id: int,
-
-#     db: DBDep
-# ):
-#     try:
-#         date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
-#         date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
-#     except ValueError:
-#         return 'Укажите даты в формате dd.mm.yyyy'
-#     return await db.rooms.extended_room_response(
-#         date_from=date_from,
-#         date_to=date_to,
-#         room_id=room_id,
-#         hotel_id=hotel_id
-#     )

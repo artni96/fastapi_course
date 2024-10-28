@@ -15,10 +15,7 @@ class RoomCreateRequest(BaseModel):
     quantity: int = Field(
         description='Количество'
     )
-    facility_ids: list[int] | None = Field(
-        default=None,
-        description='Список id удобств номера'
-    )
+    facility_ids: list[int] = []
 
     @field_validator('price')
     def validate_price(cls, value: int):
@@ -118,7 +115,7 @@ class RoomInfo(RoomCreate):
 
 class RoomWithFacilitiesResponse(RoomInfo):
 
-    facilities: list[FacilityResponse]
+    facilities: list[FacilityResponse] = []
 
 
 class RoomPutRequest(RoomCreateRequest):

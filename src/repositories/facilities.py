@@ -1,14 +1,15 @@
 from sqlalchemy import delete, insert, select
+from sqlalchemy.orm import load_only, selectinload
 
+from src.models.rooms import RoomsModel
 from src.models.facilities import FacilitiesMolel, RoomFacilitiesModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import FacilityDataMapper
-from src.schemas.facilities import FacilityResponse, RoomFacilityAddRequest
+from src.schemas.facilities import RoomFacilityAddRequest
 
 
 class FacilitiesRepository(BaseRepository):
     model = FacilitiesMolel
-    # schema = FacilityResponse
     mapper = FacilityDataMapper
 
     async def get_filtered(
@@ -22,10 +23,6 @@ class FacilitiesRepository(BaseRepository):
                 .filter(self.model.title.icontains(title))
             )
         result = await self.session.execute(query)
-        # return [
-        #     self.schema.model_validate(model_obj, from_attributes=True)
-        #     for model_obj in result.scalars().all()
-        # ]
         return [
             self.mapper.map_to_domain_entity(model_obj)
             for model_obj in result.scalars().all()
@@ -36,7 +33,7 @@ class RoomsFacilitiesRepository(BaseRepository):
     model = RoomFacilitiesModel
     schema = RoomFacilityAddRequest
 
-    async def room_facility_manager(
+    async def room_facility_creator(
         self,
         room_id: int,
         new_facility_ids: list[int]
@@ -74,3 +71,16 @@ class RoomsFacilitiesRepository(BaseRepository):
                 .values(managed_facility_data)
             )
             await self.session.execute(facility_ids_to_add)
+
+    async def get_room_facilities(
+        self,
+        room_id: int
+    ):
+        stmt = (
+            select(RoomsModel)
+            .select_from(RoomsModel)
+            .options(
+                load_only(RoomsModel.id)
+                .selectinload(RoomsModel.facilities)
+            )
+        )

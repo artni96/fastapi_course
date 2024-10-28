@@ -1,21 +1,17 @@
 from datetime import date
 
-from sqlalchemy import insert, select, func
+from sqlalchemy import insert, select
 
-from src.repositories.mappers.mappers import HotelDataMapper
 from src.db import engine
 from src.models.hotels import HotelsModel
 from src.models.rooms import RoomsModel
 from src.repositories.base import BaseRepository
-from src.repositories.queries.rooms import (
-    common_response_with_filtered_hotel_room_ids_by_date)
-from src.schemas.hotels import HotelResponse
+from src.repositories.mappers.mappers import HotelDataMapper
 from src.repositories.utils import rooms_ids_for_booking
 
 
 class HotelsRepository(BaseRepository):
     model = HotelsModel
-    # schema = HotelResponse
     mapper = HotelDataMapper
 
     def filtered_query(self, query, location=None, title=None, id=None):
@@ -68,6 +64,4 @@ class HotelsRepository(BaseRepository):
         )
         result = await self.session.execute(new_hotel_stmt)
         model_obj = result.scalars().one()
-        return self.schema.model_validate(
-            model_obj, from_attributes=True
-        )
+        return self.mapper.map_to_domain_entity(model_obj)

@@ -1,6 +1,7 @@
-from src.db import Base
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey
+
+from src.db import Base
 
 
 class FacilitiesMolel(Base):

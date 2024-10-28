@@ -1,11 +1,13 @@
-from src.repositories.mappers.mappers import BookingDataMapper
-from src.repositories.base import BaseRepository
-from src.models.booking import BookingModel
-from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
-from sqlalchemy import insert, select, update
-from src.utils.rooms import check_room_existence
 from datetime import datetime
+
+from sqlalchemy import insert, select, update
+
 from src.db import engine
+from src.models.booking import BookingModel
+from src.repositories.base import BaseRepository
+from src.repositories.mappers.mappers import BookingDataMapper
+from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
+from src.utils.rooms import check_room_existence
 
 
 class BookingRepository(BaseRepository):
@@ -24,10 +26,6 @@ class BookingRepository(BaseRepository):
             query = query.filter_by(user_id=user_id)
         query = query.offset(offset).limit(limit)
         result = await self.session.execute(query)
-        # return [
-        #     self.schema.model_validate(hotel, from_attributes=True)
-        #     for hotel in result.scalars().all()
-        # ]
         return [
             self.mapper.map_to_domain_entity(hotel)
             for hotel in result.scalars().all()
@@ -39,7 +37,6 @@ class BookingRepository(BaseRepository):
         ).returning(self.model)
         result = await self.session.execute(new_booking_stmt)
         model_obj = result.scalars().one()
-        # return self.schema.model_validate(model_obj, from_attributes=True)
         return self.mapper.map_to_domain_entity(model_obj)
 
     async def change(
@@ -67,5 +64,4 @@ class BookingRepository(BaseRepository):
         )
         result = await self.session.execute(new_booking_stmt)
         model_obj = result.scalars().one()
-        # return self.schema.model_validate(model_obj, from_attributes=True)
         return self.mapper.map_to_domain_entity(model_obj)

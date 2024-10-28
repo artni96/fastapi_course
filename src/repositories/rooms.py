@@ -5,20 +5,17 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from src.models.rooms import RoomsModel
 from src.repositories.base import BaseRepository
-from src.repositories.mappers.mappers import RoomDataMapper
-from src.repositories.queries.rooms import (
-    common_response_with_filtered_hotel_room_ids_by_date,
-    get_avaliable_rooms_number)
-from src.repositories.utils import rooms_ids_for_booking
-from src.schemas.rooms import RoomExtendedResponse, RoomWithFacilitiesResponse, RoomExtendedTestResponse, RoomInfo
-from src.repositories.utils import extended_room_response, extended_rooms_response
-from src.schemas.facilities import FacilityResponse
+from src.repositories.mappers.mappers import (RoomDataMapper,
+                                              RoomDataWithFacilitiesMapper)
+from src.repositories.queries.rooms import get_avaliable_rooms_number
+from src.repositories.utils import (extended_room_response,
+                                    extended_rooms_response,
+                                    rooms_ids_for_booking)
+from src.schemas.rooms import RoomExtendedResponse, RoomExtendedTestResponse
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsModel
-    # schema = RoomWithFacilitiesResponse
-    schema = RoomInfo
     mapper = RoomDataMapper
 
     async def get_rooms_by_date(
@@ -36,12 +33,8 @@ class RoomsRepository(BaseRepository):
         )
         result = await self.session.execute(query)
         model_objs = result.unique().scalars().all()
-        # return [
-        #     self.schema.model_validate(model)
-        #     for model in model_objs
-        # ]
         return [
-            self.mapper.map_to_domain_entity(model)
+            RoomDataWithFacilitiesMapper.map_to_domain_entity(model)
             for model in model_objs
         ]
 
@@ -76,10 +69,7 @@ class RoomsRepository(BaseRepository):
         result = await self.session.execute(query)
         model_obj = result.unique().scalars().one_or_none()
         if model_obj is not None:
-            # return self.schema.model_validate(
-            #     model_obj, from_attributes=True
-            # )
-            return self.mapper.map_to_domain_entity(
+            return RoomDataWithFacilitiesMapper.map_to_domain_entity(
                 model_obj
             )
 
@@ -148,7 +138,7 @@ class RoomsRepository(BaseRepository):
             queries['booked_and_avaliable_rooms_info_table']
         )
         rooms_facilities = await self.session.execute(
-            queries['rooms_facilities']
+            queries['rooms_info_with_facilities']
         )
         mapped_rooms_obj = (
             booked_and_avaliable_rooms_info_table.mappings().all()

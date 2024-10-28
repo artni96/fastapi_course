@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import NoResultFound
+
 from src.repositories.mappers.base import DataMapper
-from src.db import engine
 
 
 class BaseRepository:
@@ -24,14 +24,6 @@ class BaseRepository:
             .filter_by(**filter_by)
         )
         result = await self.session.execute(query)
-        # print(query.compile(
-        #     engine,
-        #     compile_kwargs={"literal_binds": True})
-        # )
-        # return [
-        #     self.schema.model_validate(model_obj, from_attributes=True)
-        #     for model_obj in result.scalars().all()
-        # ]
         return [
             self.mapper.map_to_domain_entity(model_obj)
             for model_obj in result.scalars().all()
@@ -45,9 +37,6 @@ class BaseRepository:
         result = await self.session.execute(query)
         model_obj = result.scalars().one_or_none()
         if model_obj is not None:
-            # return self.schema.model_validate(
-            #     model_obj, from_attributes=True
-            # )
             return self.mapper.map_to_domain_entity(model_obj)
 
     async def add(self, data: BaseModel):
@@ -57,10 +46,7 @@ class BaseRepository:
             )
         )
         result = await self.session.execute(new_data_stmt)
-        new_model_obj = result.scalars().one()
-        return self.schema.model_validate(
-            new_model_obj,
-            from_attributes=True)
+        new_model_obj = result.unique().scalars().one()
         return self.mapper.map_to_domain_entity(new_model_obj)
 
     async def add_bulk(self, data: list[BaseModel]):
@@ -83,8 +69,7 @@ class BaseRepository:
         result = await self.session.execute(query)
         try:
             model_obj = result.scalars().one()
-            return self.schema.model_validate(model_obj, from_attributes=True)
-            # return self.mapper.map_to_domain_entity(model_obj)
+            return self.mapper.map_to_domain_entity(model_obj)
         except NoResultFound:
             return {'status': 'NOT FOUND'}
 

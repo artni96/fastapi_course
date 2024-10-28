@@ -14,5 +14,9 @@ input_dict = {
     'id': 3
 }
 
-output_data = {k: v for k, v in input_dict.items() if v is not None}
-print(output_data)
+# output_data = {k: v for k, v in input_dict.items() if v is not None}
+# print(output_data)
+
+test_dict = [{'room_id': 18, 'booked_rooms': 1, 'avaliable_rooms': 6},]
+for elem in test_dict:
+    print(elem['room_id'] == 18)

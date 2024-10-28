@@ -1,5 +1,5 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import (Mapped, mapped_column, relationship, selectinload,
+from sqlalchemy.orm import (Mapped, mapped_column, relationship,
                             validates)
 
 from src.db import Base
