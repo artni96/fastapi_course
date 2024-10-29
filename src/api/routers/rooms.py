@@ -3,6 +3,7 @@ from datetime import date, datetime
 from fastapi import APIRouter, Body, Path, Query
 
 from src.api.dependencies import DBDep
+from src.repositories.utils.facilities import check_facilities_existence
 from src.schemas.facilities import RoomFacilityAddRequest
 from src.schemas.rooms import (RoomCreate, RoomCreateRequest, RoomInfo,
                                RoomPatch, RoomPatchRequest, RoomPut,
@@ -50,13 +51,17 @@ async def create_room(
     ),
     db: DBDep
 ):
+    await check_facilities_existence(
+        db=db,
+        facility_ids=room_data.facility_ids
+    )
     _room_data = RoomCreate(hotel_id=hotel_id, **room_data.model_dump())
     room: RoomInfo = await db.rooms.add(data=_room_data)
-    facilities = [
+    facility_ids = [
         RoomFacilityAddRequest(room_id=room.id, facility_id=facility_id)
         for facility_id in room_data.facility_ids
     ]
-    await db.room_facilities.add_bulk(data=facilities)
+    await db.room_facilities.add_bulk(data=facility_ids)
 
     await db.commit()
     return await db.rooms.get_one_or_none(hotel_id=room.hotel_id, id=room.id)
@@ -173,7 +178,8 @@ async def update_hotel_room(
     ),
     db: DBDep
 ):
-
+    new_facility_ids = room_data.facility_ids
+    await check_facilities_existence(db=db, facility_ids=new_facility_ids)
     _room_data = RoomPut(hotel_id=hotel_id, **room_data.model_dump())
     result = await db.rooms.change(
         id=room_id,
@@ -181,7 +187,6 @@ async def update_hotel_room(
         data=_room_data,
         exclude_unset=False
     )
-    new_facility_ids = room_data.facility_ids
     await db.room_facilities.room_facility_creator(
         room_id=room_id,
         new_facility_ids=new_facility_ids
@@ -211,13 +216,14 @@ async def update_hotel_room_partially(
         **room_data.model_dump(
             exclude_unset=True, exclude='facility_ids')
     )
+    new_facility_ids = room_data.facility_ids
+    await check_facilities_existence(db=db, facility_ids=new_facility_ids)
     result = await db.rooms.change(
         id=room_id,
         hotel_id=hotel_id,
         data=_room_data,
         exclude_unset=True
     )
-    new_facility_ids = room_data.facility_ids
     if new_facility_ids:
         if new_facility_ids:
             await db.room_facilities.room_facility_creator(

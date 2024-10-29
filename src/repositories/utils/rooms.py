@@ -1,9 +1,10 @@
 from datetime import date
-from sqlalchemy import select, func
-from src.models.rooms import RoomsModel
+
+from sqlalchemy import func, select
+from sqlalchemy.orm import load_only
+
 from src.models.booking import BookingModel
-from sqlalchemy.orm import selectinload, joinedload, load_only
-from src.db import engine
+from src.models.rooms import RoomsModel
 
 
 def rooms_ids_for_booking(
@@ -172,4 +173,11 @@ def extended_rooms_response(
         ),
         'rooms_info_with_facilities': rooms_info_with_facilities
     }
+    return result
+
+
+async def check_room_existence(room_id, session):
+    query = select(RoomsModel).where(RoomsModel.id == room_id)
+    room = await session.execute(query)
+    result = room.scalars().one_or_none()
     return result

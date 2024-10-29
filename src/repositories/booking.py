@@ -7,8 +7,7 @@ from src.models.booking import BookingModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingDataMapper
 from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
-from src.utils.rooms import check_room_existence
-
+from src.repositories.utils.rooms import check_room_existence
 
 class BookingRepository(BaseRepository):
     model = BookingModel

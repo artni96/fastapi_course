@@ -1,7 +1,5 @@
 from sqlalchemy import delete, insert, select
-from sqlalchemy.orm import load_only, selectinload
 
-from src.models.rooms import RoomsModel
 from src.models.facilities import FacilitiesMolel, RoomFacilitiesModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import FacilityDataMapper
@@ -14,7 +12,7 @@ class FacilitiesRepository(BaseRepository):
 
     async def get_filtered(
         self,
-        title: str
+        title: str | None = None
     ):
         query = select(self.model)
         if title:
@@ -27,6 +25,22 @@ class FacilitiesRepository(BaseRepository):
             self.mapper.map_to_domain_entity(model_obj)
             for model_obj in result.scalars().all()
         ]
+
+    async def get_by_ids(
+        self,
+        ids: list[int]
+    ):
+        query = select(self.model).filter(self.model.id.in_(ids))
+        result = await self.session.execute(query)
+        scalared_result = result.scalars().all()
+        return scalared_result
+
+    async def get_all(self, *args, **kwargs):
+        query = select(self.model).select_from(self.model)
+        result = await self.session.execute(query)
+        return [
+            (f"id: {(obj.__dict__)['id']}, title: {(obj.__dict__)['title']}")
+            for obj in result.scalars().all()]
 
 
 class RoomsFacilitiesRepository(BaseRepository):
@@ -71,16 +85,3 @@ class RoomsFacilitiesRepository(BaseRepository):
                 .values(managed_facility_data)
             )
             await self.session.execute(facility_ids_to_add)
-
-    async def get_room_facilities(
-        self,
-        room_id: int
-    ):
-        stmt = (
-            select(RoomsModel)
-            .select_from(RoomsModel)
-            .options(
-                load_only(RoomsModel.id)
-                .selectinload(RoomsModel.facilities)
-            )
-        )
