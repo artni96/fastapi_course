@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import NoResultFound
 
+from src.constants import IMAGE_PATH
 from src.models.hotels import HotelsModel
 from src.models.images import ImagesModel
 from src.models.rooms import RoomsModel
@@ -13,6 +14,7 @@ from src.repositories.utils.images import ImageManager
 from src.repositories.utils.rooms import rooms_ids_for_booking
 from src.schemas.hotels import HotelAddRequest, HotelPatch
 from src.schemas.images import ImageCreate
+from src.tasks.tasks import resize_image
 
 
 class HotelsRepository(BaseRepository):
@@ -70,6 +72,7 @@ class HotelsRepository(BaseRepository):
             )
             image_id = await db.images.add(image_data)
             data.image = image_id.id
+            resize_image.delay(f'{IMAGE_PATH}{image_name}')
         new_data_stmt = (
             insert(self.model).values(**data.model_dump()).returning(
                 self.model

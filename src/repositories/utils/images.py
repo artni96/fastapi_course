@@ -1,9 +1,11 @@
 import base64
+import os
 import random
 import string
 
 from fastapi import HTTPException, status
-import os
+
+from src.constants import IMAGE_PATH
 
 
 class ImageManager:
@@ -18,7 +20,7 @@ class ImageManager:
             image_bytes = base64.b64decode(imgstr)
 
             with open(
-                f'src/static/images/{image_name}.{ext}',
+                f'{IMAGE_PATH}{image_name}.{ext}',
                 'wb'
             ) as f:
                 f.write(image_bytes)
@@ -30,7 +32,7 @@ class ImageManager:
             )
 
     def delete_file(self, file_name_with_ext):
-        file_path = f'src/static/images/{file_name_with_ext}'
+        file_path = f'{IMAGE_PATH}{file_name_with_ext}'
         if os.path.exists(file_path):
             os.remove(file_path)
         else:

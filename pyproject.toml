@@ -54,6 +54,7 @@ pyjwt = "2.8.0"
 fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
 fastapi-cache2 = "^0.2.2"
 celery = "^5.4.0"
+pillow = "^11.0.0"
 
 
 [build-system]
