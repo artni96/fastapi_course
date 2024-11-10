@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Query
+from fastapi_cache.decorator import cache
+
 from src.api.dependencies import DBDep
 from src.schemas.facilities import FacilityBaseRequest, FacilityResponse
-
 
 facilities_router = APIRouter(
     prefix='/facilities',
@@ -13,14 +14,13 @@ facilities_router = APIRouter(
     '/',
     summary='Получение списка доступных удобств'
 )
+@cache(expire=5)
 async def get_all_facilities(
     db: DBDep,
     title: str | None = Query(default=None, max_length=64)
 ) -> list[FacilityResponse]:
-    result = await db.facilities.get_filtered(
-        title=title
-    )
-    return result
+    return await db.facilities.get_filtered(title=title)
+
 
 
 @facilities_router.get(

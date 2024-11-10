@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class HotelAddPut(BaseModel):
+class HotelBase(BaseModel):
     title: str = Field(
         description='Название отеля'
     )
@@ -10,6 +10,7 @@ class HotelAddPut(BaseModel):
     )
 
     class Config:
+        orm_mode = True
         schema_extra = {
             'examples': {
                 'Izmailovo Moscow': {
@@ -39,8 +40,27 @@ class HotelAddPut(BaseModel):
         }
 
 
-class HotelResponse(HotelAddPut):
+class HotelAddRequest(HotelBase):
+    image: str = None
+
+
+class HotelPutRequest(HotelBase):
+    image: str
+
+
+class HotelAddPut(BaseModel):
+    title: str = Field(
+        description='Название отеля'
+    )
+    location: str = Field(
+        description='Место расположения'
+    )
+    image: str = None
+
+
+class HotelResponse(HotelBase):
     id: int
+    image: int | None = None
 
 
 class HotelPatch(BaseModel):
@@ -52,3 +72,4 @@ class HotelPatch(BaseModel):
         default=None,
         description='Место расположения'
     )
+    image: str | None = None

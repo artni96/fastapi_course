@@ -4,6 +4,7 @@ from src.repositories.facilities import (FacilitiesRepository,
 from src.repositories.hotels import HotelsRepository
 from src.repositories.rooms import RoomsRepository
 from src.repositories.users import UsersRepository
+from src.repositories.images import ImagesRepository
 
 
 class DBManager:
@@ -19,6 +20,7 @@ class DBManager:
         self.bookings = BookingRepository(self.session)
         self.facilities = FacilitiesRepository(self.session)
         self.room_facilities = RoomsFacilitiesRepository(self.session)
+        self.images = ImagesRepository(self.session)
         return self
 
     async def __aexit__(self, *args):

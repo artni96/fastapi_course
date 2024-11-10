@@ -77,4 +77,4 @@ class BaseRepository:
         result = await self.session.execute(query)
         if result.rowcount == 1:
             return {'status': 'OK'}
-        return {'status': 'Unprocessable Entity'}
+        return {'status': 'object has not been found'}

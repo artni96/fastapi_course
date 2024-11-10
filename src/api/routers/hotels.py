@@ -1,9 +1,10 @@
 from datetime import date, datetime
 
-from fastapi import APIRouter, Body, Query, HTTPException
+from fastapi import APIRouter, Body, Query, status
 
 from src.api.dependencies import DBDep, PaginationDep
-from src.schemas.hotels import HotelResponse, HotelAddPut, HotelPatch
+from src.schemas.hotels import (HotelAddRequest, HotelPatch, HotelPutRequest,
+                                HotelResponse)
 
 hotels_router = APIRouter(prefix='/hotels', tags=['Отели',])
 
@@ -56,12 +57,13 @@ async def get_hotel(
 
 @hotels_router.delete(
     '/{hotel_id}',
-    summary='Удаление отеля по "hotel_id"'
+    summary='Удаление отеля по "hotel_id"',
+    status_code=status.HTTP_204_NO_CONTENT
 )
 async def delete_hotel(
     hotel_id: int,
     db: DBDep
-) -> dict:
+):
     result = await db.hotels.remove(id=hotel_id)
     await db.commit()
     return result
@@ -73,12 +75,12 @@ async def delete_hotel(
 )
 async def post_hotel(
     *,
-    hotel_data: HotelAddPut = Body(
+    hotel_data: HotelAddRequest = Body(
         openapi_examples=HotelResponse.Config.schema_extra['examples'],
     ),
     db: DBDep
 ):
-    new_hotel = await db.hotels.add(hotel_data)
+    new_hotel = await db.hotels.add(data=hotel_data, db=db)
     await db.commit()
 
     return {'status': 'OK', 'data': new_hotel}
@@ -90,10 +92,10 @@ async def post_hotel(
 )
 async def update_hotel(
     hotel_id: int,
-    hotel_data: HotelAddPut,
+    hotel_data: HotelPutRequest,
     db: DBDep
 ) -> HotelResponse:
-    result = await db.hotels.change(id=hotel_id, data=hotel_data)
+    result = await db.hotels.change(id=hotel_id, data=hotel_data, db=db)
     await db.commit()
     return result
 
@@ -110,7 +112,8 @@ async def update_hotel_partially(
     result = await db.hotels.change(
         id=hotel_id,
         exclude_unset=True,
-        data=hotel_data
+        data=hotel_data,
+        db=db
     )
     await db.commit()
     return result

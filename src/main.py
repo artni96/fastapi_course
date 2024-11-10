@@ -1,10 +1,14 @@
 import sys
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.openapi.docs import (get_redoc_html, get_swagger_ui_html,
                                   get_swagger_ui_oauth2_redirect_html)
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -14,8 +18,17 @@ from src.api.routers.facilities import facilities_router  # noqa
 from src.api.routers.hotels import hotels_router  # noqa
 from src.api.routers.rooms import rooms_router  # noqa
 from src.config import settings  # noqa
+from src.init import redis_manager  # noqa
 
-app = FastAPI(docs_url=None, redoc_url=None, debug=True)
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    await redis_manager.connect()
+    FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
+    yield
+    await redis_manager.close()
+
+app = FastAPI(docs_url=None, redoc_url=None, debug=True, lifespan=lifespan)
 app.include_router(hotels_router)
 app.include_router(user_router)
 app.include_router(rooms_router)
