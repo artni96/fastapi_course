@@ -6,7 +6,8 @@ class RoomCreateRequest(BaseModel):
     title: str = Field(
         description='Название'
     )
-    description: str = Field(
+    description: str | None = Field(
+        default=None,
         description='Описание номера'
     )
     price: int = Field(
@@ -95,7 +96,8 @@ class RoomCreate(BaseModel):
     title: str = Field(
         description='Название'
     )
-    description: str = Field(
+    description: str | None = Field(
+        default=None,
         description='Описание номера'
     )
     price: int = Field(

@@ -16,8 +16,8 @@ hotels_router = APIRouter(prefix='/hotels', tags=['Отели',])
 async def get_hotels(
     db: DBDep,
     pagination: PaginationDep,
-    date_from: date | str = Query(example='18.10.2024'),
-    date_to: date | str = Query(example='21.10.2024'),
+    date_from: date | str = Query(examples=['18.10.2024',]),
+    date_to: date | str = Query(examples=['21.10.2024',]),
     title: str | None = Query(
         default=None,
         description='Название отеля'
@@ -71,7 +71,8 @@ async def delete_hotel(
 
 @hotels_router.post(
     '/',
-    summary='Создание нового отеля'
+    summary='Создание нового отеля',
+    status_code=status.HTTP_201_CREATED
 )
 async def post_hotel(
     *,

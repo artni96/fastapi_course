@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
-from fastapi import APIRouter, Body, Path, Query
+from celery.bin.control import status
+from fastapi import APIRouter, Body, Path, Query, status
 
 from src.api.dependencies import DBDep
 from src.repositories.utils.facilities import check_facilities_existence
@@ -22,10 +23,10 @@ rooms_router = APIRouter(prefix='/hotels', tags=['Номера'])
 )
 async def get_hotel_rooms(
     *,
-    hotel_id: int = Path(example=1),
+    hotel_id: int = Path(examples=[1,]),
     db: DBDep,
-    date_from: date | str = Query(example='18.10.2024'),
-    date_to: date | str = Query(example='21.10.2024'),
+    date_from: date | str = Query(examples=['18.10.2024',]),
+    date_to: date | str = Query(examples=['21.10.2024',]),
 ) -> list:
     try:
         date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
@@ -42,26 +43,29 @@ async def get_hotel_rooms(
 
 @rooms_router.post(
     '/{hotel_id}',
-    summary='Создание нового типа номеров для отеля "hotel_id"')
+    summary='Создание нового типа номеров для отеля "hotel_id"',
+    status_code=status.HTTP_201_CREATED
+)
 async def create_room(
     *,
     hotel_id: int,
     room_data: RoomCreateRequest = Body(
         openapi_examples=RoomCreateRequest.model_config['json_schema_extra']
     ),
-    db: DBDep
+    db: DBDep,
 ):
-    await check_facilities_existence(
-        db=db,
-        facility_ids=room_data.facility_ids
-    )
     _room_data = RoomCreate(hotel_id=hotel_id, **room_data.model_dump())
     room: RoomInfo = await db.rooms.add(data=_room_data)
-    facility_ids = [
-        RoomFacilityAddRequest(room_id=room.id, facility_id=facility_id)
-        for facility_id in room_data.facility_ids
-    ]
-    await db.room_facilities.add_bulk(data=facility_ids)
+    if room_data.facility_ids:
+        await check_facilities_existence(
+            db=db,
+            facility_ids=room_data.facility_ids
+        )
+        facility_ids = [
+            RoomFacilityAddRequest(room_id=room.id, facility_id=facility_id)
+            for facility_id in room_data.facility_ids
+        ]
+        await db.room_facilities.add_bulk(data=facility_ids)
 
     await db.commit()
     return await db.rooms.get_one_or_none(hotel_id=room.hotel_id, id=room.id)
@@ -96,8 +100,8 @@ async def get_hotel_room(
 async def get_filtered_hotel_room_by_date(
     *,
     hotel_id: int,
-    date_from: date | str = Query(example='18.10.2024'),
-    date_to: date | str = Query(example='21.10.2024'),
+    date_from: date | str = Query(examples=['18.10.2024',]),
+    date_to: date | str = Query(examples=['21.10.2024',]),
     db: DBDep
 ):
     try:
@@ -123,8 +127,8 @@ async def get_filtered_hotel_room_by_date(
 )
 async def get_rooms_by_date(
     *,
-    date_from: date | str = Query(example='18.10.2024'),
-    date_to: date | str = Query(example='21.10.2024'),
+    date_from: date | str = Query(examples=['18.10.2024',]),
+    date_to: date | str = Query(examples=['21.10.2024,']),
     hotel_id: int,
     room_id: int,
 
