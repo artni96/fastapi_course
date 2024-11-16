@@ -16,6 +16,21 @@ class BookingCreateRequest(BaseModel):
         )
     room_id: int
 
+    model_config = {
+        'json_schema_extra': {
+            'Создание новой брони': {
+                'summary': 'Создание новой брони',
+                'value': {
+                    'date_from': date.today().strftime(DATE_FORMAT),
+                    'date_to': (
+                        date.today() + timedelta(days=1)
+                        ).strftime(DATE_FORMAT),
+                    'room_id': 1,
+                }
+            }
+        }
+    }
+
     @field_validator('date_from')
     def check_date_from_later_than_now(cls, value):
         if value < date.today():
@@ -40,22 +55,6 @@ class BookingCreateRequest(BaseModel):
                 'раньше времени конца бронирования'
             )
         return values
-
-    class Config:
-        schema_extra = {
-            'examples': {
-                'Бронь 1': {
-                    'summary': 'Бронь 1',
-                    'value': {
-                        'date_from': date.today().strftime(DATE_FORMAT),
-                        'date_to': (
-                            date.today() + timedelta(days=1)
-                            ).strftime(DATE_FORMAT),
-                        'room_id': 1
-                    }
-                }
-            }
-        }
 
 
 class BookingCreate(BaseModel):

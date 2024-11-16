@@ -76,7 +76,7 @@ async def delete_hotel(
 async def post_hotel(
     *,
     hotel_data: HotelAddRequest = Body(
-        openapi_examples=HotelResponse.Config.schema_extra['examples'],
+        openapi_examples=HotelResponse.model_config['json_schema_extra'],
     ),
     db: DBDep
 ):

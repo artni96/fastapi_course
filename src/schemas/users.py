@@ -3,10 +3,6 @@ import re
 from pydantic import (BaseModel, ConfigDict, Field, field_validator,
                       model_validator, EmailStr)
 from fastapi_users import schemas
-from sqlalchemy import select, func
-from src.models.users import User as UserModel
-from fastapi import HTTPException
-from src.db import async_session_maker
 
 
 class UserRequestAdd(BaseModel):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 
 from src.api.dependencies import DBDep, PaginationDep, UserDep
 from src.schemas.booking import (BookingCreate, BookingCreateRequest,
@@ -50,7 +50,10 @@ async def get_my_bookings(
     summary='Создание нового бронирования номера'
 )
 async def create_booking(
-    booking_data: BookingCreateRequest,
+    *,
+    booking_data: BookingCreateRequest = Body(
+        openapi_examples=BookingCreateRequest.model_config['json_schema_extra']
+    ),
     db: DBDep,
     user: UserDep
 ):

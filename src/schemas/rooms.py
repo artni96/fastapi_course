@@ -33,60 +33,59 @@ class RoomCreateRequest(BaseModel):
             )
         return value
 
-    class Config:
-        schema_extra = {
-            'examples': {
-                'Одноместный номер': {
-                    'summary': 'Одноместный номер',
-                    'value': {
-                        'title': 'Одноместный номер',
-                        'description': (
-                            'Одноместный - cтандартный с широкой кроватью или '
-                            'с двумя раздельными кроватями'
-                        ),
-                        'price': 3000,
-                        'quantity': 10,
-                        'facility_ids': [3, 4]
-                    }
-                },
-                'Двуместный номер': {
-                    'summary': 'Двуместный номер',
-                    'value': {
-                        'title': 'Двуместный номер',
-                        'description': (
-                            'Двухместный - cтандартный с двумя кроватями'
-                        ),
-                        'price': 4500,
-                        'quantity': 7,
-                        'facility_ids': [3,]
-                    }
-                },
-                'Двуместный номер повышенной комфортности': {
-                    'summary': 'Двуместный номер повышенной комфортности',
-                    'value': {
-                        'title': 'Двуместный номер повышенной комфортности',
-                        'description': (
-                            'Двухместный - повышенной комфортности c широкой '
-                            'кроватью или с двумя раздельными кроватями'
-                        ),
-                        'price': 6000,
-                        'quantity': 6,
-                    }
-                },
-                'Невалидный запрос': {
-                    'summary': 'Невалидный запрос',
-                    'value': {
-                        'title': 'Одноместный номер',
-                        'description': (
-                            'Одноместный - cтандартный с широкой кроватью или '
-                            'с двумя раздельными кроватями'
-                        ),
-                        'price': -10,
-                        'quantity': -10
-                    }
-                },
-            }
+    model_config = {
+        'json_schema_extra': {
+            'Одноместный номер': {
+                'summary': 'Одноместный номер',
+                'value': {
+                    'title': 'Одноместный номер',
+                    'description': (
+                        'Одноместный - cтандартный с широкой кроватью или '
+                        'с двумя раздельными кроватями'
+                    ),
+                    'price': 3000,
+                    'quantity': 10,
+                    'facility_ids': [3, 4]
+                }
+            },
+            'Двуместный номер': {
+                'summary': 'Двуместный номер',
+                'value': {
+                    'title': 'Двуместный номер',
+                    'description': (
+                        'Двухместный - cтандартный с двумя кроватями'
+                    ),
+                    'price': 4500,
+                    'quantity': 7,
+                    'facility_ids': [3,]
+                }
+            },
+            'Двуместный номер повышенной комфортности': {
+                'summary': 'Двуместный номер повышенной комфортности',
+                'value': {
+                    'title': 'Двуместный номер повышенной комфортности',
+                    'description': (
+                        'Двухместный - повышенной комфортности c широкой '
+                        'кроватью или с двумя раздельными кроватями'
+                    ),
+                    'price': 6000,
+                    'quantity': 6,
+                }
+            },
+            'Невалидный запрос': {
+                'summary': 'Невалидный запрос',
+                'value': {
+                    'title': 'Одноместный номер',
+                    'description': (
+                        'Одноместный - cтандартный с широкой кроватью или '
+                        'с двумя раздельными кроватями'
+                    ),
+                    'price': -10,
+                    'quantity': -10
+                }
+            },
         }
+    }
 
 
 class RoomCreate(BaseModel):
@@ -120,21 +119,20 @@ class RoomWithFacilitiesResponse(RoomInfo):
 
 class RoomPutRequest(RoomCreateRequest):
 
-    class Config:
-        schema_extra = {
-            'examples': {
-                'Изменение всех полей': {
-                    'summary': 'Изменение всех полей',
-                    'value': {
-                        'title': 'Новое название номера',
-                        'description': 'Новое описание номера',
-                        'price': 2000,
-                        'quantity': 7,
-                        'facility_ids': [3, 4]
-                    }
+    model_config = {
+        'json_schema_extra': {
+            'Изменение всех полей': {
+                'summary': 'Изменение всех полей',
+                'value': {
+                    'title': 'Новое название номера',
+                    'description': 'Новое описание номера',
+                    'price': 2000,
+                    'quantity': 7,
+                    'facility_ids': [3, 4]
                 }
             }
         }
+    }
 
 
 class RoomPut(RoomCreate):
@@ -163,36 +161,35 @@ class RoomPatchRequest(BaseModel):
         description='Список id удобств номера'
     )
 
-    class Config:
-        schema_extra = {
-            'examples': {
-                'Изменение одного поля title': {
-                    'summary': 'Изменение одного поля title',
-                    'value': {
-                        'title': 'Новое название номера',
-                    }
-                },
-                'Изменение полей price и quantity': {
-                    'summary': 'Изменение полей price и quantity',
-                    'value': {
-                        'price': 1000,
-                        'quantity': 5
-                    }
-                },
-                'Изменение полей title, description, price, quantity и '
-                'facility_ids': {
-                    'summary': ('Изменение полей title, description, '
-                                'price, quantity и facility_ids'),
-                    'value': {
-                        'title': 'Новое название номера',
-                        'description': 'Новое описание номера',
-                        'price': 2000,
-                        'quantity': 7,
-                        'facility_ids': [1, 2]
-                    }
+    model_config = {
+        'json_schema_extra': {
+            'Изменение одного поля title': {
+                'summary': 'Изменение одного поля title',
+                'value': {
+                    'title': 'Новое название номера',
+                }
+            },
+            'Изменение полей price и quantity': {
+                'summary': 'Изменение полей price и quantity',
+                'value': {
+                    'price': 1000,
+                    'quantity': 5
+                }
+            },
+            'Изменение полей title, description, price, quantity и '
+            'facility_ids': {
+                'summary': ('Изменение полей title, description, '
+                            'price, quantity и facility_ids'),
+                'value': {
+                    'title': 'Новое название номера',
+                    'description': 'Новое описание номера',
+                    'price': 2000,
+                    'quantity': 7,
+                    'facility_ids': [1, 2]
                 }
             }
         }
+    }
 
 
 class RoomPatch(RoomPatchRequest):

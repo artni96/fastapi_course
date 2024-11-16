@@ -47,7 +47,7 @@ async def create_room(
     *,
     hotel_id: int,
     room_data: RoomCreateRequest = Body(
-        openapi_examples=RoomCreateRequest.Config.schema_extra['examples']
+        openapi_examples=RoomCreateRequest.model_config['json_schema_extra']
     ),
     db: DBDep
 ):
@@ -174,7 +174,7 @@ async def update_hotel_room(
     hotel_id: int,
     room_id: int,
     room_data: RoomPutRequest = Body(
-        openapi_examples=RoomPutRequest.Config.schema_extra['examples']
+        openapi_examples=RoomPutRequest.model_config['json_schema_extra']
     ),
     db: DBDep
 ):
@@ -207,7 +207,7 @@ async def update_hotel_room_partially(
     hotel_id: int,
     room_id: int,
     room_data: RoomPatchRequest = Body(
-        openapi_examples=RoomPatchRequest.Config.schema_extra['examples']
+        openapi_examples=RoomPatchRequest.model_config['json_schema_extra']
     ),
     db: DBDep
 ):
