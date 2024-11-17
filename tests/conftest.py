@@ -66,13 +66,31 @@ async def add_new_user(ac, setup_database):
     response = await ac.post(
         "/auth/register",
         json = {
-            "email": "user@example.com",
+            "email": "test@ya.net",
             "password": "string",
             "is_active": True,
             "is_superuser": False,
             "is_verified": False,
-            "username": "string",
+            "username": "test_user",
             "first_name": "string",
             "last_name": "string"
         })
     assert response.status_code == 201
+
+@pytest.fixture(scope='session')
+async def auth_ac(add_new_user, ac):
+    jwt_token = await ac.post(
+        '/auth/jwt/login',
+        data = {
+            'grant_type': '',
+            'username': 'test@ya.net',
+            'password': 'string',
+            'scope': '',
+            'client_id': '',
+            'client_secret': ''})
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+            base_url="http://test",
+            headers={'Authorization': f'Bearer {jwt_token.json()["access_token"]}'}
+    ) as auth_ac:
+        yield auth_ac

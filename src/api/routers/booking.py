@@ -8,7 +8,7 @@ booking_router = APIRouter(prefix='/bookings', tags=['Бронирование �
 
 
 @booking_router.get(
-    '/',
+    '',
     summary='Получение информации всех бронированиях'
 )
 async def get_all_bookings(
@@ -46,7 +46,7 @@ async def get_my_bookings(
 
 
 @booking_router.post(
-    '/',
+    '',
     summary='Создание нового бронирования номера'
 )
 async def create_booking(

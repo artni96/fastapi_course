@@ -58,10 +58,10 @@ class BookingRepository(BaseRepository):
                 updated_at=datetime.now())
             .returning(self.model)
         )
-        print(new_booking_stmt.compile(
-            engine,
-            compile_kwargs={"literal_binds": True})
-        )
+        # print(new_booking_stmt.compile(
+        #     engine,
+        #     compile_kwargs={"literal_binds": True})
+        # )
         result = await self.session.execute(new_booking_stmt)
         model_obj = result.scalars().one()
         return self.mapper.map_to_domain_entity(model_obj)

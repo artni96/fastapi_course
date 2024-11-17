@@ -1,7 +1,7 @@
 from fastapi import status
 
-async def test_get_hotels(ac):
-    result = await ac.get(
+async def test_get_hotels(auth_ac):
+    result = await auth_ac.get(
         '/hotels',
         params={
             'date_from': '20.11.2024',
