@@ -53,7 +53,7 @@ class User(BaseModel):
     username: str = Field(max_length=100)
     first_name: str | None = Field(default=None, max_length=64)
     last_name: str | None = Field(default=None, max_length=128)
-    role: str
+    # role: str
 
     model_config = ConfigDict(from_attributes=True)
 

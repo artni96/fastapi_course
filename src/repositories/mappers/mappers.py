@@ -1,3 +1,4 @@
+from src.models import User
 from src.models.booking import BookingModel
 from src.models.facilities import FacilitiesMolel
 from src.models.hotels import HotelsModel
@@ -9,6 +10,7 @@ from src.schemas.facilities import FacilityResponse
 from src.schemas.hotels import HotelResponse
 from src.schemas.images import ImageRead
 from src.schemas.rooms import RoomInfo, RoomWithFacilitiesResponse
+from src.schemas.users import User as UserRead
 
 
 class HotelDataMapper(DataMapper):
@@ -39,3 +41,8 @@ class FacilityDataMapper(DataMapper):
 class ImageMapper(DataMapper):
     db_model = ImagesModel
     schema = ImageRead
+
+
+class UserMapper(DataMapper):
+    db = User
+    schema = UserRead

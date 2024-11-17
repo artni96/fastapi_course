@@ -39,10 +39,11 @@ class BookingRepository(BaseRepository):
         return self.mapper.map_to_domain_entity(model_obj)
 
     async def change(
-            self,
-            data: BookingUpdate,
-            booking_id: int,
-            exclude_unset: bool = False):
+        self,
+        data: BookingUpdate,
+        booking_id: int,
+        exclude_unset: bool = False
+    ):
         if data.room_id:
             if not await check_room_existence(
                 room_id=data.room_id,
