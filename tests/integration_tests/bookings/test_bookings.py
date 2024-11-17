@@ -39,4 +39,4 @@ async def test_booking_crud(db, add_new_user, setup_database):
     await db.bookings.remove(id=updated_booking.id)
     all_bookings = await db.bookings.get_all()
     assert all_bookings == []
-    await db.commit()
+    await db.rollback()

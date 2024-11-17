@@ -10,7 +10,7 @@ hotels_router = APIRouter(prefix='/hotels', tags=['Отели',])
 
 
 @hotels_router.get(
-    '/',
+    '',
     summary='Получение отелей с свободными номерами в указанный период'
 )
 async def get_hotels(
@@ -70,7 +70,7 @@ async def delete_hotel(
 
 
 @hotels_router.post(
-    '/',
+    '',
     summary='Создание нового отеля',
     status_code=status.HTTP_201_CREATED
 )

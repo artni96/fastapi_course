@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, status
 from fastapi_cache.decorator import cache
 
 from src.api.dependencies import DBDep
@@ -11,7 +11,7 @@ facilities_router = APIRouter(
 
 
 @facilities_router.get(
-    '/',
+    '',
     summary='Получение списка доступных удобств'
 )
 @cache(expire=5)
@@ -37,7 +37,8 @@ async def get_facility_by_id(
     return result
 
 @facilities_router.post(
-    '/',
+    '',
+    status_code=status.HTTP_201_CREATED,
     summary='Создание нового удобства'
 )
 async def create_facility(
