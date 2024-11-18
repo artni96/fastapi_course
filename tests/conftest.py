@@ -66,14 +66,9 @@ async def add_new_user(ac, setup_database):
     response = await ac.post(
         "/auth/register",
         json = {
-            "email": "test@ya.net",
+            "email": "test_user_1@ya.net",
             "password": "string",
-            "is_active": True,
-            "is_superuser": False,
-            "is_verified": False,
-            "username": "test_user",
-            "first_name": "string",
-            "last_name": "string"
+            "username": "test_user_1",
         })
     assert response.status_code == 201
 
@@ -82,12 +77,9 @@ async def auth_ac(add_new_user, ac):
     jwt_token = await ac.post(
         '/auth/jwt/login',
         data = {
-            'grant_type': '',
-            'username': 'test@ya.net',
+            'username': 'test_user_1@ya.net',
             'password': 'string',
-            'scope': '',
-            'client_id': '',
-            'client_secret': ''})
+    })
     async with AsyncClient(
         transport=ASGITransport(app=app),
             base_url="http://test",

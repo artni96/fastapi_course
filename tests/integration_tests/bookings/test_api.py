@@ -20,20 +20,20 @@ async def test_get_bookings(auth_ac):
 @pytest.mark.parametrize(
     "room_id, date_from, date_to, status_code",
     [
-        (5, '20.11.2024', '26.11.2024', status.HTTP_201_CREATED),
-        (5, '19.11.2024', '26.11.2024', status.HTTP_400_BAD_REQUEST),
-        (5, '21.11.2024', '25.11.2024', status.HTTP_400_BAD_REQUEST),
-        (5, '27.11.2024', '28.11.2024', status.HTTP_201_CREATED),
-        (5, '26.11.2024', '27.11.2024', status.HTTP_400_BAD_REQUEST),
+        (5, '20.12.2024', '26.12.2024', status.HTTP_201_CREATED),
+        (5, '19.12.2024', '26.12.2024', status.HTTP_400_BAD_REQUEST),
+        (5, '21.12.2024', '25.12.2024', status.HTTP_400_BAD_REQUEST),
+        (5, '27.12.2024', '28.12.2024', status.HTTP_201_CREATED),
+        (5, '26.12.2024', '27.12.2024', status.HTTP_400_BAD_REQUEST),
     ]
 )
 @pytest.mark.order(2)
 async def test_create_booking(
-    auth_ac,
     room_id,
     date_from,
     date_to,
-    status_code
+    status_code,
+    auth_ac,
 ):
     new_booking = await auth_ac.post(
         '/bookings',
