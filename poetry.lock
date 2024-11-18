@@ -1680,6 +1680,20 @@ pytest = ">=8.3.3"
 testing = ["covdefaults (>=2.3)", "coverage (>=7.6.1)", "pytest-mock (>=3.14)"]
 
 [[package]]
+name = "pytest-order"
+version = "1.3.0"
+description = "pytest plugin to run your tests in a specific order"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pytest_order-1.3.0-py3-none-any.whl", hash = "sha256:2cd562a21380345dd8d5774aa5fd38b7849b6ee7397ca5f6999bbe6e89f07f6e"},
+    {file = "pytest_order-1.3.0.tar.gz", hash = "sha256:51608fec3d3ee9c0adaea94daa124a5c4c1d2bb99b00269f098f414307f23dde"},
+]
+
+[package.dependencies]
+pytest = {version = ">=6.2.4", markers = "python_version >= \"3.10\""}
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
@@ -2226,4 +2240,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11"
-content-hash = "e3384f8f92a5915858896ee2df7b3dee985335c5c62cdaa535b71cced456fe64"
+content-hash = "973311c298eeb90f5d7006f4b060a4956455b37627d3a66f21e8f1d254b6b723"

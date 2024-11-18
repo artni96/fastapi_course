@@ -1,8 +1,10 @@
 from datetime import  date
 
 from src.schemas.booking import BookingCreate, BookingUpdate
+import pytest
 
 
+@pytest.mark.order(1)
 async def test_booking_crud(db, add_new_user, setup_database):
     user_id = (await db.users.get_all())[0].id
     room_id = (await db.rooms.get_all())[0].id
@@ -38,5 +40,5 @@ async def test_booking_crud(db, add_new_user, setup_database):
     assert updated_booking.date_to == updated_booking_data.date_to
     await db.bookings.remove(id=updated_booking.id)
     all_bookings = await db.bookings.get_all()
-    assert len(all_bookings) == 1
+    assert all_bookings == []
     await db.rollback()
