@@ -6,7 +6,7 @@ from fastapi import status
 @pytest.mark.parametrize(
     'email, username, password',
     [
-        ('test_user_2@ya.ru', 'test_user_2', 'string')
+        ('test_user_2@ya.ru', 'test_user_2', 'string'),
     ]
 )
 async def test_e2e_auth(
@@ -23,7 +23,11 @@ async def test_e2e_auth(
             "username": username,
         }
     )
-    assert  new_user.status_code == status.HTTP_201_CREATED
+    assert new_user.status_code == status.HTTP_201_CREATED
+    assert new_user.json()['email'] == email
+    assert new_user.json()['username'] == username
+    assert 'id' in new_user.json()
+    assert 'password' not in new_user.json()
 
     get_access_token = await ac.post(
         '/auth/jwt/login',
