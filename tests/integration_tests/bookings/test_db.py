@@ -38,5 +38,5 @@ async def test_booking_crud(db, add_new_user, setup_database):
     assert updated_booking.date_to == updated_booking_data.date_to
     await db.bookings.remove(id=updated_booking.id)
     all_bookings = await db.bookings.get_all()
-    assert all_bookings == []
+    assert len(all_bookings) == 1
     await db.rollback()

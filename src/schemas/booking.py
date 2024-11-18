@@ -7,13 +7,15 @@ from src.constants import DATE_FORMAT, DATETIME_FORMAT
 
 
 class BookingCreateRequest(BaseModel):
-    date_from: date | str = Field(
-        default=(date.today().strftime(DATE_FORMAT)))
-    date_to: date | str = Field(
-        default=(
-            date.today() + timedelta(days=1)
-            ).strftime(DATE_FORMAT)
-        )
+    date_from: str = Field(
+        # default=str((date.today().strftime(DATE_FORMAT)))
+    )
+    date_to: str = Field(
+        # default=str((
+        #     date.today() + timedelta(days=1)
+        #     ).strftime(DATE_FORMAT)
+        # )
+    )
     room_id: int
 
     model_config = {
@@ -21,10 +23,8 @@ class BookingCreateRequest(BaseModel):
             'Создание новой брони': {
                 'summary': 'Создание новой брони',
                 'value': {
-                    'date_from': date.today().strftime(DATE_FORMAT),
-                    'date_to': (
-                        date.today() + timedelta(days=1)
-                        ).strftime(DATE_FORMAT),
+                    'date_from': '18.11.2024',
+                    'date_to': '20.11.2024',
                     'room_id': 1,
                 }
             }
@@ -33,23 +33,26 @@ class BookingCreateRequest(BaseModel):
 
     @field_validator('date_from')
     def check_date_from_later_than_now(cls, value):
-        if value < date.today():
+        if  datetime.strptime(
+                value,
+                DATE_FORMAT
+            ) < datetime.today():
             raise ValueError(
                 'Дата бронирования не может быть раньше текущего времени'
             )
         return value
 
-    @model_validator(mode='before')
+    @model_validator(mode='after')
     def check_date_to_later_than_date_from(cls, values):
-        values['date_to'] = datetime.strptime(
-                values['date_to'],
+        values.date_to = datetime.strptime(
+                values.date_to,
                 DATE_FORMAT
             )
-        values['date_from'] = datetime.strptime(
-                values['date_from'],
+        values.date_from = datetime.strptime(
+                values.date_from,
                 DATE_FORMAT
             )
-        if values['date_to'] <= values['date_from']:
+        if values.date_to <= values.date_from:
             raise ValueError(
                 'Время начала бронирвоания не может быть '
                 'раньше времени конца бронирования'

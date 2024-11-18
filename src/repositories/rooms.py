@@ -37,11 +37,11 @@ class RoomsRepository(BaseRepository):
             for model in model_objs
         ]
 
-    async def get_one_or_none(self, hotel_id: int, id: int):
+    async def get_one_or_none(self, id: int):
         query = (
             select(self.model)
             .options(joinedload(self.model.facilities))
-            .filter_by(hotel_id=hotel_id, id=id)
+            .filter_by(id=id)
         )
         result = await self.session.execute(query)
         model_obj = result.unique().scalars().one_or_none()

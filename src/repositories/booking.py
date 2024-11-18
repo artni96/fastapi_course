@@ -1,13 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import insert, select, update
+from fastapi import HTTPException, status
+from sqlalchemy import insert, select, update, func
 
-from src.db import engine
+from src.models import RoomsModel
 from src.models.booking import BookingModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingDataMapper
-from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
 from src.repositories.utils.rooms import check_room_existence
+from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
+
 
 class BookingRepository(BaseRepository):
     model = BookingModel
@@ -31,6 +33,27 @@ class BookingRepository(BaseRepository):
         ]
 
     async def add(self, data: BookingCreate):
+        check_avaliable_rooms_amount_stmt = (
+            select((RoomsModel.quantity - func.coalesce(func.count('*'), 0)).label('avaliable_rooms_amount'))
+            .select_from(self.model)
+            .filter(
+                self.model.date_from <= data.date_to,
+                self.model.date_to >= data.date_from,
+                self.model.room_id == data.room_id
+            )
+            .group_by(RoomsModel.quantity)
+            .outerjoin(
+                RoomsModel,
+                RoomsModel.id == self.model.room_id
+            )
+        )
+        check_avaliable_rooms_amount = await self.session.execute(
+            check_avaliable_rooms_amount_stmt
+        )
+        check_avaliable_rooms_amount = check_avaliable_rooms_amount.scalars().one_or_none()
+        if check_avaliable_rooms_amount is not None:
+            if check_avaliable_rooms_amount <= 0:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Нет свободных номеров')
         new_booking_stmt = insert(self.model).values(
             **data.model_dump()
         ).returning(self.model)

@@ -68,7 +68,7 @@ async def create_room(
         await db.room_facilities.add_bulk(data=facility_ids)
 
     await db.commit()
-    return await db.rooms.get_one_or_none(hotel_id=room.hotel_id, id=room.id)
+    return await db.rooms.get_one_or_none(id=room.id)
 
 
 @rooms_router.get(

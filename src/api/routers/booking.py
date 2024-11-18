@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, status
 
 from src.api.dependencies import DBDep, PaginationDep, UserDep
 from src.schemas.booking import (BookingCreate, BookingCreateRequest,
@@ -47,6 +47,7 @@ async def get_my_bookings(
 
 @booking_router.post(
     '',
+    status_code=status.HTTP_201_CREATED,
     summary='Создание нового бронирования номера'
 )
 async def create_booking(
