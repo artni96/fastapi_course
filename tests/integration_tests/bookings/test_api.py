@@ -1,13 +1,13 @@
-from dns.resolver import query
-from fastapi import status
-import pytest
+from datetime import date, timedelta
 
-from src.db import engine_null_pool, Base
-from src.models import BookingModel
-from sqlalchemy import text
+import pytest
+from fastapi import status
 from sqlalchemy import delete
 
+from src.db import engine_null_pool
+from src.models import BookingModel
 
+DATE_FORMAT = '%d.%m.%Y'
 
 async def test_get_bookings(auth_ac):
     result = await auth_ac.get(
@@ -57,9 +57,12 @@ async def test_delete_all_bookings():
 @pytest.mark.parametrize(
     "room_id, date_from, date_to, status_code, bookings_amount",
     [
-        (5, '20.11.2024', '23.11.2024', status.HTTP_201_CREATED, 1),
-        (5, '24.11.2024', '26.11.2024', status.HTTP_201_CREATED, 2),
-        (5, '24.11.2024', '26.11.2024', status.HTTP_400_BAD_REQUEST, 2),
+        # (5, '20.11.2024', '23.11.2024', status.HTTP_201_CREATED, 1),
+        # (5, '24.11.2024', '26.11.2024', status.HTTP_201_CREATED, 2),
+        # (5, '24.11.2024', '26.11.2024', status.HTTP_400_BAD_REQUEST, 2),
+        (5, (date.today() + timedelta(days=1)).strftime(DATE_FORMAT), (date.today()+timedelta(days=3)).strftime(DATE_FORMAT), status.HTTP_201_CREATED, 1),
+        (5, (date.today() + timedelta(days=4)).strftime(DATE_FORMAT), (date.today() + timedelta(days=6)).strftime(DATE_FORMAT), status.HTTP_201_CREATED, 2),
+        (5, (date.today() + timedelta(days=4)).strftime(DATE_FORMAT), (date.today() + timedelta(days=6)).strftime(DATE_FORMAT), status.HTTP_400_BAD_REQUEST, 2),
     ]
 )
 @pytest.mark.order(4)

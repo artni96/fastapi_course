@@ -1,6 +1,5 @@
 from datetime import date, datetime
 
-from celery.bin.control import status
 from fastapi import APIRouter, Body, Path, Query, status
 
 from src.api.dependencies import DBDep

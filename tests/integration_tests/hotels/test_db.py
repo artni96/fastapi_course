@@ -1,7 +1,5 @@
-from src.db import async_session_maker_null_pool
 from src.schemas.hotels import HotelAddPut
-from src.utils.db_manager import DBManager
-from src.base import *
+from src.base import * # noqa F401
 
 
 async def test_add_hotel(db):

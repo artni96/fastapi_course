@@ -1,5 +1,4 @@
 import pytest
-from debugpy.adapter import access_token
 from fastapi import status
 
 

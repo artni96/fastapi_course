@@ -47,7 +47,7 @@ def rooms_ids_for_booking(
 
     rooms_ids_for_hotel = (
         rooms_ids_for_hotel
-        .subquery(name='rooms_ids_for_hotel')
+        .scalar_subquery()
     )
 
     rooms_ids_to_get = (
