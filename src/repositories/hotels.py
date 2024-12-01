@@ -27,22 +27,19 @@ class HotelsRepository(BaseRepository):
         if title is not None:
             query = query.filter(self.model.title.icontains(title))
         if location is not None:
-            query = query.filter(self.model.location.icontains(
-                location))
+            query = query.filter(self.model.location.icontains(location))
         return query
 
     async def get_filtered_hotels(
-            self,
-            date_from: date,
-            date_to: date,
-            location: str,
-            title: str,
-            offset: int,
-            limit: int
+        self,
+        date_from: date,
+        date_to: date,
+        location: str,
+        title: str,
+        offset: int,
+        limit: int,
     ):
-        rooms_ids_to_get = rooms_ids_for_booking(
-            date_from=date_from, date_to=date_to
-        )
+        rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotels_ids_to_get = (
             select(RoomsModel.hotel_id)
             .select_from(RoomsModel)
@@ -50,33 +47,28 @@ class HotelsRepository(BaseRepository):
         )
         query = select(self.model).filter(self.model.id.in_(hotels_ids_to_get))
         filtered_query_by_params = self.filtered_query(
-            query=query,
-            location=location,
-            title=title
+            query=query, location=location, title=title
         )
-        filtered_query_by_params = filtered_query_by_params.limit(
-            limit).offset(offset)
+        filtered_query_by_params = filtered_query_by_params.limit(limit).offset(offset)
         result = await self.session.execute(filtered_query_by_params)
-        return [self.mapper.map_to_domain_entity(hotel)
-                for hotel in result.scalars().all()]
+        return [
+            self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()
+        ]
 
     async def add(self, data: HotelAddRequest, db):
         if data.image:
             new_random_name = ImageManager().create_random_name()
             image_name = ImageManager().base64_to_file(
-                base64_string=data.image,
-                image_name=new_random_name
+                base64_string=data.image, image_name=new_random_name
             )
             image_data = ImageCreate(
                 name=image_name,
             )
             image_id = await db.images.add(image_data)
             data.image = image_id.id
-            resize_image.delay(f'{IMAGE_PATH}{image_name}')
+            resize_image.delay(f"{IMAGE_PATH}{image_name}")
         new_data_stmt = (
-            insert(self.model).values(**data.model_dump()).returning(
-                self.model
-            )
+            insert(self.model).values(**data.model_dump()).returning(self.model)
         )
         result = await self.session.execute(new_data_stmt)
         new_model_obj = result.unique().scalars().one()
@@ -85,9 +77,7 @@ class HotelsRepository(BaseRepository):
     async def remove(self, **filtered_by) -> dict:
         try:
             hotel_to_delete_stmt = (
-                delete(self.model)
-                .filter_by(**filtered_by)
-                .returning(self.model)
+                delete(self.model).filter_by(**filtered_by).returning(self.model)
             )
             removed_hotel = await self.session.execute(hotel_to_delete_stmt)
             removed_hotel = removed_hotel.scalars().one()
@@ -103,24 +93,20 @@ class HotelsRepository(BaseRepository):
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Не удалось удалить отель'
+                detail="Не удалось удалить отель",
             )
         if removed_hotel:
-            return {'status': 'OK'}
-        return {'status': 'Отель не существует'}
+            return {"status": "OK"}
+        return {"status": "Отель не существует"}
 
     async def change(
-            self,
-            db,
-            data: HotelPatch,
-            exclude_unset: bool = False,
-            **filtered_by
+        self, db, data: HotelPatch, exclude_unset: bool = False, **filtered_by
     ):
         if data.image:
             image_id_subquery = (
                 select(self.model.image)
                 .filter_by(**filtered_by)
-                .subquery('image_id_subquery')
+                .subquery("image_id_subquery")
             )
             image_to_delete_stmt = (
                 delete(ImagesModel)
@@ -133,8 +119,7 @@ class HotelsRepository(BaseRepository):
                 ImageManager().delete_file(file_name_with_ext=image_name)
             new_random_name = ImageManager().create_random_name()
             image_name = ImageManager().base64_to_file(
-                base64_string=data.image,
-                image_name=new_random_name
+                base64_string=data.image, image_name=new_random_name
             )
             image_data = ImageCreate(
                 name=image_name,
@@ -152,4 +137,4 @@ class HotelsRepository(BaseRepository):
             model_obj = result.scalars().one()
             return self.mapper.map_to_domain_entity(model_obj)
         except NoResultFound:
-            return {'status': 'NOT FOUND'}
+            return {"status": "NOT FOUND"}

@@ -20,9 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "bookingmodel", sa.Column("updated_at", sa.DateTime(), nullable=True)
-    )
+    op.add_column("bookingmodel", sa.Column("updated_at", sa.DateTime(), nullable=True))
 
 
 def downgrade() -> None:

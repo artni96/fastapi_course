@@ -1,7 +1,13 @@
 from datetime import date, datetime, timedelta
 
-from pydantic import (BaseModel, ConfigDict, Field, field_serializer,
-                      field_validator, model_validator)
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from src.constants import DATE_FORMAT, DATETIME_FORMAT
 
@@ -19,49 +25,37 @@ class BookingCreateRequest(BaseModel):
     room_id: int
 
     model_config = {
-        'json_schema_extra': {
-            'Создание новой брони': {
-                'summary': 'Создание новой брони',
-                'value': {
-                    'date_from': '18.11.2024',
-                    'date_to': '20.11.2024',
-                    'room_id': 1,
-                }
+        "json_schema_extra": {
+            "Создание новой брони": {
+                "summary": "Создание новой брони",
+                "value": {
+                    "date_from": "18.11.2024",
+                    "date_to": "20.11.2024",
+                    "room_id": 1,
+                },
             }
         }
     }
 
-    @field_validator('date_from')
+    @field_validator("date_from")
     def check_date_from_later_than_now(cls, value):
-        if  datetime.strptime(
-                value,
-                DATE_FORMAT
-            ) < datetime.today():
-            raise ValueError(
-                'Дата бронирования не может быть раньше текущего времени'
-            )
+        if datetime.strptime(value, DATE_FORMAT) < datetime.today():
+            raise ValueError("Дата бронирования не может быть раньше текущего времени")
         return value
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_date_to_later_than_date_from(cls, values):
-        values.date_to = datetime.strptime(
-                values.date_to,
-                DATE_FORMAT
-            )
-        values.date_from = datetime.strptime(
-                values.date_from,
-                DATE_FORMAT
-            )
+        values.date_to = datetime.strptime(values.date_to, DATE_FORMAT)
+        values.date_from = datetime.strptime(values.date_from, DATE_FORMAT)
         if values.date_to <= values.date_from:
             raise ValueError(
-                'Время начала бронирвоания не может быть '
-                'раньше времени конца бронирования'
+                "Время начала бронирвоания не может быть "
+                "раньше времени конца бронирования"
             )
         return values
 
 
 class BookingCreate(BaseModel):
-
     price: int
     user_id: int
     date_to: date
@@ -70,32 +64,26 @@ class BookingCreate(BaseModel):
 
 
 class BookingUpdateRequest(BaseModel):
-    date_from: date | str | None = Field(
-        default=(date.today().strftime(DATE_FORMAT)))
+    date_from: date | str | None = Field(default=(date.today().strftime(DATE_FORMAT)))
     date_to: date | str | None = Field(
-        default=(
-            date.today() + timedelta(days=1)
-            ).strftime(DATE_FORMAT)
-        )
+        default=(date.today() + timedelta(days=1)).strftime(DATE_FORMAT)
+    )
     room_id: int | None = Field(None)
 
-    @field_validator('date_from')
+    @field_validator("date_from")
     def check_date_from_later_than_now(cls, value):
         if value < date.today():
-            raise ValueError(
-                'Дата бронирования не может быть раньше текущего времени'
-            )
+            raise ValueError("Дата бронирования не может быть раньше текущего времени")
         return value
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     def check_date_to_later_than_date_from(cls, values):
-        values['date_to'] = datetime.strptime(values['date_to'], DATE_FORMAT)
-        values['date_from'] = datetime.strptime(
-            values['date_from'], DATE_FORMAT)
-        if values['date_to'] <= values['date_from']:
+        values["date_to"] = datetime.strptime(values["date_to"], DATE_FORMAT)
+        values["date_from"] = datetime.strptime(values["date_from"], DATE_FORMAT)
+        if values["date_to"] <= values["date_from"]:
             raise ValueError(
-                'Время начала бронирвоания не может быть '
-                'раньше времени конца бронирования'
+                "Время начала бронирвоания не может быть "
+                "раньше времени конца бронирования"
             )
         return values
 
@@ -122,19 +110,19 @@ class BookingResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_serializer('date_to')
+    @field_serializer("date_to")
     def serialize_date_to(self, date_to: date):
         return date_to.strftime(DATE_FORMAT)
 
-    @field_serializer('date_from')
+    @field_serializer("date_from")
     def serialize_date_from(self, date_from: date):
         return date_from.strftime(DATE_FORMAT)
 
-    @field_serializer('created_at')
+    @field_serializer("created_at")
     def serialize_created_at(self, created_at: datetime):
         return created_at.strftime(DATETIME_FORMAT)
 
-    @field_serializer('updated_at')
+    @field_serializer("updated_at")
     def serialize_updated_at(self, created_at: datetime):
         if created_at:
             return created_at.strftime(DATETIME_FORMAT)

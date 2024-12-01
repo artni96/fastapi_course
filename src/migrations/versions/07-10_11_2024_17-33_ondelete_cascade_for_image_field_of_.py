@@ -9,7 +9,7 @@ Create Date: 2024-11-10 17:33:44.025596
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa # noqa
+import sqlalchemy as sa  # noqa
 
 
 # revision identifiers, used by Alembic.
@@ -20,9 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_constraint(
-        "hotelsmodel_image_fkey", "hotelsmodel", type_="foreignkey"
-    )
+    op.drop_constraint("hotelsmodel_image_fkey", "hotelsmodel", type_="foreignkey")
     op.create_foreign_key(
         None,
         "hotelsmodel",

@@ -10,18 +10,14 @@ class BaseRepository:
     mapper: DataMapper = None
 
     def __init__(
-            self,
-            session,
+        self,
+        session,
     ) -> None:
         self.session = session
 
     async def get_filtered(self, *args, **filter_by):
         filter_by = {k: v for k, v in filter_by.items() if v is not None}
-        query = (
-            select(self.model)
-            .filter(*args)
-            .filter_by(**filter_by)
-        )
+        query = select(self.model).filter(*args).filter_by(**filter_by)
         result = await self.session.execute(query)
         return [
             self.mapper.map_to_domain_entity(model_obj)
@@ -40,9 +36,7 @@ class BaseRepository:
 
     async def add(self, data: BaseModel):
         new_data_stmt = (
-            insert(self.model).values(**data.model_dump()).returning(
-                self.model
-            )
+            insert(self.model).values(**data.model_dump()).returning(self.model)
         )
         result = await self.session.execute(new_data_stmt)
         new_model_obj = result.unique().scalars().one()
@@ -53,12 +47,7 @@ class BaseRepository:
         new_data_stmt = insert(self.model).values(managed_data)
         await self.session.execute(new_data_stmt)
 
-    async def change(
-            self,
-            data: BaseModel,
-            exclude_unset: bool = False,
-            **filtered_by
-    ):
+    async def change(self, data: BaseModel, exclude_unset: bool = False, **filtered_by):
         query = (
             update(self.model)
             .filter_by(**filtered_by)
@@ -70,11 +59,11 @@ class BaseRepository:
             model_obj = result.scalars().one()
             return self.mapper.map_to_domain_entity(model_obj)
         except NoResultFound:
-            return {'status': 'NOT FOUND'}
+            return {"status": "NOT FOUND"}
 
     async def remove(self, **filtered_by) -> dict:
         query = delete(self.model).filter_by(**filtered_by)
         result = await self.session.execute(query)
         if result.rowcount == 1:
-            return {'status': 'OK'}
-        return {'status': 'object has not been found'}
+            return {"status": "OK"}
+        return {"status": "object has not been found"}

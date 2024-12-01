@@ -3,8 +3,8 @@ from typing import TypeVar
 from src.db import Base
 
 
-SchemaType = TypeVar('SchemaType', bound=BaseModel)
-DBModelType = TypeVar('DBModelType', bound=Base)  # type: ignore
+SchemaType = TypeVar("SchemaType", bound=BaseModel)
+DBModelType = TypeVar("DBModelType", bound=Base)  # type: ignore
 
 
 class DataMapper:

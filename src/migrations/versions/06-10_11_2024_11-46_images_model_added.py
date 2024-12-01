@@ -26,12 +26,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
-    op.add_column(
-        "hotelsmodel", sa.Column("image", sa.Integer(), nullable=True)
-    )
-    op.create_foreign_key(
-        None, "hotelsmodel", "imagesmodel", ["image"], ["id"]
-    )
+    op.add_column("hotelsmodel", sa.Column("image", sa.Integer(), nullable=True))
+    op.create_foreign_key(None, "hotelsmodel", "imagesmodel", ["image"], ["id"])
 
 
 def downgrade() -> None:

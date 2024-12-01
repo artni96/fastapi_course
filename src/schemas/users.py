@@ -1,7 +1,13 @@
 import re
 
-from pydantic import (BaseModel, ConfigDict, Field, field_validator,
-                      model_validator, EmailStr)
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+    EmailStr,
+)
 from fastapi_users import schemas
 
 
@@ -11,11 +17,11 @@ class UserRequestAdd(BaseModel):
     password: str = Field(max_length=64)
     first_name: str | None = Field(default=None, max_length=64)
     last_name: str | None = Field(default=None, max_length=128)
-    role: str = Field(default='Пользователь')
+    role: str = Field(default="Пользователь")
 
-    @field_validator('role')
+    @field_validator("role")
     def validate_role(cls, value: str):
-        role_list = ('Админ', 'Модератор', 'Пользователь')
+        role_list = ("Админ", "Модератор", "Пользователь")
 
         if value.capitalize() not in role_list:
             raise ValueError(
@@ -23,17 +29,14 @@ class UserRequestAdd(BaseModel):
             )
         return value.capitalize()
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def using_different_languages(cls, values):
         if values.first_name is not None and values.last_name is not None:
-            full_name = f'{values.first_name} {values.last_name}'
-            if (
-                (re.search('[а-я]', full_name, re.IGNORECASE)) and
-                (re.search('[a-z]', full_name, re.IGNORECASE))
+            full_name = f"{values.first_name} {values.last_name}"
+            if (re.search("[а-я]", full_name, re.IGNORECASE)) and (
+                re.search("[a-z]", full_name, re.IGNORECASE)
             ):
-                raise ValueError(
-                    'Пожалуйста, не смешивайте русские и латинские буквы'
-                )
+                raise ValueError("Пожалуйста, не смешивайте русские и латинские буквы")
             return values
         return values
 
@@ -44,7 +47,7 @@ class UserAdd(BaseModel):
     hashed_password: str = Field(max_length=64)
     first_name: str | None = Field(default=None, max_length=64)
     last_name: str | None = Field(default=None, max_length=128)
-    role: str = Field(default='Пользователь')
+    role: str = Field(default="Пользователь")
 
 
 class User(BaseModel):

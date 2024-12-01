@@ -9,61 +9,57 @@ user_router = APIRouter()
 
 user_router.include_router(
     fastapi_users.get_auth_router(auth_backend),
-    prefix='/auth/jwt',
-    tags=['Авторизация и аутентификация'],
+    prefix="/auth/jwt",
+    tags=["Авторизация и аутентификация"],
 )
 user_router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix='/auth',
-    tags=['Авторизация и аутентификация'],
+    prefix="/auth",
+    tags=["Авторизация и аутентификация"],
 )
 users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
 
 users_router.routes = [
-    rout for rout in users_router.routes if rout.name != 'users:delete_user'
+    rout for rout in users_router.routes if rout.name != "users:delete_user"
 ]  # удаление ручки для удаления пользователя
 
 user_router.include_router(
     users_router,
-    prefix='/users',
-    tags=['Пользователи'],
+    prefix="/users",
+    tags=["Пользователи"],
 )
 
 route_desired_content = [
     [
         "auth:jwt.login",
         "User login to get access to to protected endpoints",
-        "Вход пользователя в систему"
+        "Вход пользователя в систему",
     ],
-    [
-        "auth:jwt.logout",
-        "User logout",
-        "Выход из системы"
-    ],
+    ["auth:jwt.logout", "User logout", "Выход из системы"],
     [
         "register:register",
         "Создание нового пользователя в базе данных",
-        "Создание нового пользователя"
+        "Создание нового пользователя",
     ],
     [
-        'users:user',
-        'Gets information from the database about a specific user by id',
-        'Получение информации о пользователе по его "id"'
+        "users:user",
+        "Gets information from the database about a specific user by id",
+        'Получение информации о пользователе по его "id"',
     ],
     [
-        'users:current_user',
-        'Gets information from the database about a specific user by id',
-        'Получение информации об авторизованном пользователе'
+        "users:current_user",
+        "Gets information from the database about a specific user by id",
+        "Получение информации об авторизованном пользователе",
     ],
     [
         "users:patch_user",
         "Changes all information in the database from a specific user by id",
-        'Частичное обновление данных о пользователе по его "id"'
+        'Частичное обновление данных о пользователе по его "id"',
     ],
     [
         "users:patch_current_user",
         "Changes all information in the database from a specific user by id",
-        'Частичное обновление данных об авторизованном пользователе'
+        "Частичное обновление данных об авторизованном пользователе",
     ],
 ]
 

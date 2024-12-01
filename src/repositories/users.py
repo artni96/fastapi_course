@@ -19,7 +19,7 @@ class UsersRepository(BaseRepository):
             self.model.id,
             self.model.first_name,
             self.model.last_name,
-    )
+        )
         result = await self.session.execute(query)
         result = result.mappings().all()
         return [UserMapper.map_to_domain_entity(obj) for obj in result]
@@ -29,6 +29,4 @@ class UsersRepository(BaseRepository):
         result = await self.session.execute(query)
         model_obj = result.scalars().one_or_none()
         if model_obj is not None:
-            return UserJwtWithHashedPassword.model_validate(
-                model_obj
-            )
+            return UserJwtWithHashedPassword.model_validate(model_obj)

@@ -2,38 +2,32 @@ from pydantic import BaseModel, Field
 
 
 class HotelBase(BaseModel):
-    title: str = Field(
-        description='Название отеля'
-    )
-    location: str = Field(
-        description='Место расположения'
-    )
+    title: str = Field(description="Название отеля")
+    location: str = Field(description="Место расположения")
 
     model_config = {
-        'json_schema_extra': {
-            'Izmailovo Moscow': {
-                'summary': 'Izmailovo Moscow',
-                'value': {
-                    'title': 'Izmailovo Alpha Hotel',
-                    'location': 'Izmailovskoye shosse, 71A, Moscow',
+        "json_schema_extra": {
+            "Izmailovo Moscow": {
+                "summary": "Izmailovo Moscow",
+                "value": {
+                    "title": "Izmailovo Alpha Hotel",
+                    "location": "Izmailovskoye shosse, 71A, Moscow",
                 },
             },
-            'Ararat Moscow': {
-                'summary': 'Ararat Moscow',
-                'value': {
-                    'title': 'Ararat Park Hotel Moscow',
-                    'location': 'Neglinnaya ul., 4, Moskva, Moscow'
+            "Ararat Moscow": {
+                "summary": "Ararat Moscow",
+                "value": {
+                    "title": "Ararat Park Hotel Moscow",
+                    "location": "Neglinnaya ul., 4, Moskva, Moscow",
                 },
             },
-            'Stella di Mosca Moscow': {
-                'summary': 'Stella di Mosca Moscow',
-                'value': {
-                    'title': 'Stella di Mosca By BVLGARI Hotels',
-                    'location': (
-                        'Moscow, Bolshaya Nikitskaya Street, 9, Moscow'
-                    )
+            "Stella di Mosca Moscow": {
+                "summary": "Stella di Mosca Moscow",
+                "value": {
+                    "title": "Stella di Mosca By BVLGARI Hotels",
+                    "location": ("Moscow, Bolshaya Nikitskaya Street, 9, Moscow"),
                 },
-            }
+            },
         }
     }
 
@@ -47,12 +41,8 @@ class HotelPutRequest(HotelBase):
 
 
 class HotelAddPut(BaseModel):
-    title: str = Field(
-        description='Название отеля'
-    )
-    location: str = Field(
-        description='Место расположения'
-    )
+    title: str = Field(description="Название отеля")
+    location: str = Field(description="Место расположения")
     image: str = None
 
 
@@ -62,12 +52,6 @@ class HotelResponse(HotelBase):
 
 
 class HotelPatch(BaseModel):
-    title: str | None = Field(
-        default=None,
-        description='Название отеля'
-    )
-    location: str | None = Field(
-        default=None,
-        description='Место расположения'
-    )
+    title: str | None = Field(default=None, description="Название отеля")
+    location: str | None = Field(default=None, description="Место расположения")
     image: str | None = None

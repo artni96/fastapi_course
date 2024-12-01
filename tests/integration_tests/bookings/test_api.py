@@ -7,12 +7,11 @@ from sqlalchemy import delete
 from src.db import engine_null_pool
 from src.models import BookingModel
 
-DATE_FORMAT = '%d.%m.%Y'
+DATE_FORMAT = "%d.%m.%Y"
+
 
 async def test_get_bookings(auth_ac):
-    result = await auth_ac.get(
-        '/bookings'
-    )
+    result = await auth_ac.get("/bookings")
     assert result.status_code == status.HTTP_200_OK
     isinstance(result.json(), list)
 
@@ -20,12 +19,12 @@ async def test_get_bookings(auth_ac):
 @pytest.mark.parametrize(
     "room_id, date_from, date_to, status_code",
     [
-        (5, '20.12.2024', '26.12.2024', status.HTTP_201_CREATED),
-        (5, '19.12.2024', '26.12.2024', status.HTTP_400_BAD_REQUEST),
-        (5, '21.12.2024', '25.12.2024', status.HTTP_400_BAD_REQUEST),
-        (5, '27.12.2024', '28.12.2024', status.HTTP_201_CREATED),
-        (5, '26.12.2024', '27.12.2024', status.HTTP_400_BAD_REQUEST),
-    ]
+        (5, "20.12.2024", "26.12.2024", status.HTTP_201_CREATED),
+        (5, "19.12.2024", "26.12.2024", status.HTTP_400_BAD_REQUEST),
+        (5, "21.12.2024", "25.12.2024", status.HTTP_400_BAD_REQUEST),
+        (5, "27.12.2024", "28.12.2024", status.HTTP_201_CREATED),
+        (5, "26.12.2024", "27.12.2024", status.HTTP_400_BAD_REQUEST),
+    ],
 )
 @pytest.mark.order(2)
 async def test_create_booking(
@@ -36,12 +35,8 @@ async def test_create_booking(
     auth_ac,
 ):
     new_booking = await auth_ac.post(
-        '/bookings',
-        json={
-            'room_id': room_id,
-            'date_from': date_from,
-            'date_to': date_to
-        }
+        "/bookings",
+        json={"room_id": room_id, "date_from": date_from, "date_to": date_to},
     )
     assert new_booking.status_code == status_code
 
@@ -60,30 +55,37 @@ async def test_delete_all_bookings():
         # (5, '20.11.2024', '23.11.2024', status.HTTP_201_CREATED, 1),
         # (5, '24.11.2024', '26.11.2024', status.HTTP_201_CREATED, 2),
         # (5, '24.11.2024', '26.11.2024', status.HTTP_400_BAD_REQUEST, 2),
-        (5, (date.today() + timedelta(days=1)).strftime(DATE_FORMAT), (date.today()+timedelta(days=3)).strftime(DATE_FORMAT), status.HTTP_201_CREATED, 1),
-        (5, (date.today() + timedelta(days=4)).strftime(DATE_FORMAT), (date.today() + timedelta(days=6)).strftime(DATE_FORMAT), status.HTTP_201_CREATED, 2),
-        (5, (date.today() + timedelta(days=4)).strftime(DATE_FORMAT), (date.today() + timedelta(days=6)).strftime(DATE_FORMAT), status.HTTP_400_BAD_REQUEST, 2),
-    ]
+        (
+            5,
+            (date.today() + timedelta(days=1)).strftime(DATE_FORMAT),
+            (date.today() + timedelta(days=3)).strftime(DATE_FORMAT),
+            status.HTTP_201_CREATED,
+            1,
+        ),
+        (
+            5,
+            (date.today() + timedelta(days=4)).strftime(DATE_FORMAT),
+            (date.today() + timedelta(days=6)).strftime(DATE_FORMAT),
+            status.HTTP_201_CREATED,
+            2,
+        ),
+        (
+            5,
+            (date.today() + timedelta(days=4)).strftime(DATE_FORMAT),
+            (date.today() + timedelta(days=6)).strftime(DATE_FORMAT),
+            status.HTTP_400_BAD_REQUEST,
+            2,
+        ),
+    ],
 )
 @pytest.mark.order(4)
 async def test_my_bookings(
-    auth_ac,
-    room_id,
-    date_from,
-    date_to,
-    status_code,
-    bookings_amount
+    auth_ac, room_id, date_from, date_to, status_code, bookings_amount
 ):
     new_booking = await auth_ac.post(
-        '/bookings',
-        json={
-            'room_id': room_id,
-            'date_from': date_from,
-            'date_to': date_to
-        }
+        "/bookings",
+        json={"room_id": room_id, "date_from": date_from, "date_to": date_to},
     )
     assert new_booking.status_code == status_code
-    current_bookings_amount = await auth_ac.get(
-        '/bookings/me'
-    )
+    current_bookings_amount = await auth_ac.get("/bookings/me")
     assert len(current_bookings_amount.json()) == bookings_amount

@@ -1,4 +1,4 @@
-from datetime import  date
+from datetime import date
 
 from src.schemas.booking import BookingCreate, BookingUpdate
 import pytest
@@ -13,7 +13,7 @@ async def test_booking_crud(db, add_new_user, setup_database):
         user_id=user_id,
         room_id=room_id,
         date_to=date(year=2024, month=11, day=20),
-        date_from=date(year=2024, month=11, day=16)
+        date_from=date(year=2024, month=11, day=16),
     )
     new_booking = await db.bookings.add(data=initial_booking_data)
     assert new_booking.price == initial_booking_data.price
@@ -26,12 +26,10 @@ async def test_booking_crud(db, add_new_user, setup_database):
     updated_booking_data = BookingUpdate(
         price=2400,
         date_to=date(year=2024, month=11, day=20),
-        date_from=date(year=2024, month=11, day=16)
+        date_from=date(year=2024, month=11, day=16),
     )
     updated_booking = await db.bookings.change(
-        booking_id = get_booking.id,
-        data=updated_booking_data,
-        exclude_unset=True
+        booking_id=get_booking.id, data=updated_booking_data, exclude_unset=True
     )
     assert updated_booking.price == updated_booking_data.price
     assert updated_booking.user_id == initial_booking_data.user_id
