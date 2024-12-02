@@ -1,4 +1,5 @@
 import json
+from typing import AsyncGenerator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -59,7 +60,7 @@ async def setup_database(check_test_mode):
 
 
 @pytest.fixture(scope="session")
-async def ac():
+async def ac() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:

@@ -1,8 +1,9 @@
 from datetime import date, datetime
 
-from fastapi import APIRouter, Body, Path, Query, status
+from fastapi import APIRouter, Body, Path, Query, status, HTTPException
 
 from src.api.dependencies import DBDep
+from src.api.exceptions import NotFoundException
 from src.repositories.utils.facilities import check_facilities_existence
 from src.schemas.facilities import RoomFacilityAddRequest
 from src.schemas.rooms import (
@@ -50,9 +51,12 @@ async def get_hotel_rooms(
         date_from = datetime.strptime(date_from, "%d.%m.%Y").date()
     except ValueError:
         return "Укажите даты в формате dd.mm.yyyy"
-    rooms = await db.rooms.get_rooms_by_date(
-        hotel_id=hotel_id, date_from=date_from, date_to=date_to
-    )
+    try:
+        rooms = await db.rooms.get_rooms_by_date(
+            hotel_id=hotel_id, date_from=date_from, date_to=date_to
+        )
+    except NotFoundException:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Нет свободных номеров')
     return rooms
 
 

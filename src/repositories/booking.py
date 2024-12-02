@@ -2,13 +2,18 @@ from datetime import datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy import insert, select, update, func
+from sqlalchemy.exc import NoResultFound
 
+from src.api.exceptions import NoAvailableRoomsException, NotFoundException, RoomNotFoundException, \
+    OnlyForAuthorException, BookingNotFoundException, DateToLaterThanDateFromException, \
+    DateToLaterThanCurrentTimeException
+from src.constants import DATE_FORMAT
 from src.models import RoomsModel
 from src.models.booking import BookingModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingDataMapper
 from src.repositories.utils.rooms import check_room_existence
-from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate
+from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate, BookingUpdateRequest
 
 
 class BookingRepository(BaseRepository):
@@ -50,10 +55,10 @@ class BookingRepository(BaseRepository):
         )
         if check_avaliable_rooms_amount is not None:
             if check_avaliable_rooms_amount <= 0:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Нет свободных номеров",
-                )
+                raise NoAvailableRoomsException()
+        else:
+            raise NoAvailableRoomsException()
+
         new_booking_stmt = (
             insert(self.model).values(**data.model_dump()).returning(self.model)
         )
@@ -62,25 +67,39 @@ class BookingRepository(BaseRepository):
         return self.mapper.map_to_domain_entity(model_obj)
 
     async def change(
-        self, data: BookingUpdate, booking_id: int, exclude_unset: bool = False
+        self, booking_data: BookingUpdateRequest, booking_id: int, user_id: int, db, exclude_unset: bool = False
     ):
-        if data.room_id:
-            if not await check_room_existence(
-                room_id=data.room_id, session=self.session
-            ):
-                return {"status": "room with given room_id has not been found"}
+        date_to = datetime.strptime(booking_data.date_to, DATE_FORMAT).date()
+        date_from = datetime.strptime(booking_data.date_from, DATE_FORMAT).date()
+        if date_to <= date_from:
+            raise DateToLaterThanDateFromException
+        if date_from <= datetime.today().date():
+            raise DateToLaterThanCurrentTimeException
+        booking = await db.bookings.get_one_or_none(id=booking_id)
+        if not booking:
+            raise BookingNotFoundException
+        if booking.user_id != user_id:
+            raise OnlyForAuthorException
+        if booking_data.room_id:
+            room = await db.rooms.get_one(id=booking_data.room_id)
+        else:
+            room = await db.rooms.get_one_or_none(id=booking.room_id)
+        price = room.price
+        _booking_data = BookingUpdate(
+            price = price,
+            date_from = date_from,
+            date_to = date_to,
+            room_id=booking_data.room_id
+        )
         new_booking_stmt = (
             update(self.model)
             .where(self.model.id == booking_id)
             .values(
-                **data.model_dump(exclude_none=exclude_unset), updated_at=datetime.now()
+                **_booking_data.model_dump(exclude_none=exclude_unset), updated_at=datetime.now()
             )
             .returning(self.model)
         )
-        # print(new_booking_stmt.compile(
-        #     engine,
-        #     compile_kwargs={"literal_binds": True})
-        # )
+
         result = await self.session.execute(new_booking_stmt)
         model_obj = result.scalars().one()
         return self.mapper.map_to_domain_entity(model_obj)

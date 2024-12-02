@@ -33,7 +33,7 @@ class HotelBase(BaseModel):
 
 
 class HotelAddRequest(HotelBase):
-    image: str = None
+    image: str | None = None
 
 
 class HotelPutRequest(HotelBase):

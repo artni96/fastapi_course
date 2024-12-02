@@ -2,12 +2,14 @@ from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import NoResultFound
 
+from src.api.exceptions import NotFoundException
 from src.repositories.mappers.base import DataMapper
 
 
 class BaseRepository:
     model = None
     mapper: DataMapper = None
+    exception: BaseException = NotFoundException
 
     def __init__(
         self,
@@ -33,6 +35,15 @@ class BaseRepository:
         model_obj = result.scalars().one_or_none()
         if model_obj is not None:
             return self.mapper.map_to_domain_entity(model_obj)
+
+    async def get_one(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
+        result = await self.session.execute(query)
+        try:
+            model_obj = result.scalars().one()
+        except NoResultFound:
+            raise self.exception
+        return self.mapper.map_to_domain_entity(model_obj)
 
     async def add(self, data: BaseModel):
         new_data_stmt = (

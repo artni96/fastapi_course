@@ -1,8 +1,9 @@
 from datetime import date, datetime
 
-from fastapi import APIRouter, Body, Query, status
+from fastapi import APIRouter, Body, Query, status, HTTPException
 
 from src.api.dependencies import DBDep, PaginationDep
+from src.api.exceptions import NotFoundException
 from src.schemas.hotels import (
     HotelAddRequest,
     HotelPatch,
@@ -56,7 +57,10 @@ async def get_hotels(
 
 @hotels_router.get("/{hotel_id}", summary='Получение информации об отеле по "hotel_id"')
 async def get_hotel(hotel_id: int, db: DBDep):
-    return await db.hotels.get_one_or_none(id=hotel_id)
+    try:
+        return await db.hotels.get_one(id=hotel_id)
+    except NotFoundException:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Отель не найден')
 
 
 @hotels_router.delete(
