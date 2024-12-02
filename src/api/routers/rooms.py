@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Body, Path, Query, status, HTTPException
 
@@ -35,22 +35,13 @@ async def get_hotel_rooms(
         ]
     ),
     db: DBDep,
-    date_from: date | str = Query(
-        examples=[
-            "18.10.2024",
-        ]
+    date_from: date = Query(
+        default=date.today() + timedelta(days=1)
     ),
-    date_to: date | str = Query(
-        examples=[
-            "21.10.2024",
-        ]
+    date_to: date = Query(
+        default=date.today() + timedelta(days=2)
     ),
 ) -> list:
-    try:
-        date_to = datetime.strptime(date_to, "%d.%m.%Y").date()
-        date_from = datetime.strptime(date_from, "%d.%m.%Y").date()
-    except ValueError:
-        return "Укажите даты в формате dd.mm.yyyy"
     try:
         rooms = await db.rooms.get_rooms_by_date(
             hotel_id=hotel_id, date_from=date_from, date_to=date_to

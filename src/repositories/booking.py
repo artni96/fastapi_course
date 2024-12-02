@@ -31,7 +31,12 @@ class BookingRepository(BaseRepository):
             self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()
         ]
 
-    async def add(self, data: BookingCreate):
+    async def add(self, booking_data: BookingCreate, db, user_id: int):
+        room = await db.rooms.get_one(id=booking_data.room_id)
+        price = room.price
+        _booking_data = BookingCreate(
+            price=price, user_id=user_id, **booking_data.model_dump()
+        )
         check_avaliable_rooms_amount_stmt = (
             select(
                 (RoomsModel.quantity - func.coalesce(func.count("*"), 0)).label(
@@ -40,9 +45,9 @@ class BookingRepository(BaseRepository):
             )
             .select_from(self.model)
             .filter(
-                self.model.date_from <= data.date_to,
-                self.model.date_to >= data.date_from,
-                self.model.room_id == data.room_id,
+                self.model.date_from <= _booking_data.date_to,
+                self.model.date_to >= _booking_data.date_from,
+                self.model.room_id == _booking_data.room_id,
             )
             .group_by(RoomsModel.quantity)
             .outerjoin(RoomsModel, RoomsModel.id == self.model.room_id)
@@ -60,7 +65,7 @@ class BookingRepository(BaseRepository):
             raise NoAvailableRoomsException()
 
         new_booking_stmt = (
-            insert(self.model).values(**data.model_dump()).returning(self.model)
+            insert(self.model).values(**_booking_data.model_dump()).returning(self.model)
         )
         result = await self.session.execute(new_booking_stmt)
         model_obj = result.scalars().one()
@@ -69,8 +74,8 @@ class BookingRepository(BaseRepository):
     async def change(
         self, booking_data: BookingUpdateRequest, booking_id: int, user_id: int, db, exclude_unset: bool = False
     ):
-        date_to = datetime.strptime(booking_data.date_to, DATE_FORMAT).date()
-        date_from = datetime.strptime(booking_data.date_from, DATE_FORMAT).date()
+        date_from = booking_data.date_from
+        date_to = booking_data.date_to
         if date_to <= date_from:
             raise DateToLaterThanDateFromException
         if date_from <= datetime.today().date():

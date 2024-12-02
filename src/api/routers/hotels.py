@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Body, Query, status, HTTPException
 
@@ -25,24 +25,20 @@ hotels_router = APIRouter(
 async def get_hotels(
     db: DBDep,
     pagination: PaginationDep,
-    date_from: date | str = Query(
-        examples=[
-            "18.10.2024",
-        ]
+    date_from: date = Query(
+        default=f"{date.today() + timedelta(days=1)}",
     ),
-    date_to: date | str = Query(
-        examples=[
-            "21.10.2024",
-        ]
+    date_to: date = Query(
+        default=f"{date.today() + timedelta(days=2)}",
     ),
     title: str | None = Query(default=None, description="Название отеля"),
     location: str | None = Query(default=None, description="Расположение"),
 ) -> list[HotelResponse] | str | None:
-    try:
-        date_to = datetime.strptime(date_to, "%d.%m.%Y").date()
-        date_from = datetime.strptime(date_from, "%d.%m.%Y").date()
-    except ValueError:
-        return "Укажите даты в формате dd.mm.yyyy"
+    # try:
+    #     date_to = datetime.strptime(date_to, "%d.%m.%Y").date()
+    #     date_from = datetime.strptime(date_from, "%d.%m.%Y").date()
+    # except ValueError:
+    #     return "Укажите даты в формате dd.mm.yyyy"
     per_page = pagination.per_page or 3
     result = await db.hotels.get_filtered_hotels(
         date_to=date_to,

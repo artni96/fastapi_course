@@ -51,15 +51,21 @@ async def create_booking(
     db: DBDep,
     user: UserDep,
 ):
-    room = await db.rooms.get_one_or_none(id=booking_data.room_id)
-    if not room:
-        return {"status": "Номер с указанным id не найден"}
-    price = room.price
-    _booking_data = BookingCreate(
-        price=price, user_id=user.id, **booking_data.model_dump()
-    )
+    # try:
+    #     room = await db.rooms.get_one(id=booking_data.room_id)
+    # except RoomNotFoundException as ex:
+    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
+    # price = room.price
+    # _booking_data = BookingCreate(
+    #     price=price, user_id=user.id, **booking_data.model_dump()
+    # )
     try:
-        result = await db.bookings.add(data=_booking_data)
+        result = await db.bookings.add(booking_data=booking_data, user_id=user.id, db=db)
+    except RoomNotFoundException as ex:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ex.detail
+        )
     except NoAvailableRoomsException:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

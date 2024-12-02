@@ -46,11 +46,10 @@ class RoomsRepository(BaseRepository):
             .filter_by(id=id)
         )
         result = await self.session.execute(query)
-        model_obj = result.unique().scalars().one()
-        try:
+        model_obj = result.unique().scalars().one_or_none()
+        if model_obj:
             return RoomDataWithFacilitiesMapper.map_to_domain_entity(model_obj)
-        except NoResultFound:
-            raise NotFoundException
+
 
     async def extended_room_response(
         self, date_from: date, date_to: date, room_id: int, hotel_id: int
