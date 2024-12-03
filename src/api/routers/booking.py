@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Body, status, HTTPException
 
 from src.api.dependencies import DBDep, PaginationDep, UserDep
-from src.api.exceptions import NoAvailableRoomsException, RoomNotFoundException, BookingNotFoundException, \
-    DateToLaterThanDateFromException, DateToLaterThanCurrentTimeException
+from src.exceptions import NoAvailableRoomsException, RoomForHotelNotFoundException, BookingNotFoundException, \
+    DateToLaterThanDateFromException, DateToLaterThanCurrentTimeException, RoomNotFoundException
 from src.schemas.booking import (
-    BookingCreate,
     BookingCreateRequest,
     BookingUpdateRequest,
 )
@@ -51,20 +50,12 @@ async def create_booking(
     db: DBDep,
     user: UserDep,
 ):
-    # try:
-    #     room = await db.rooms.get_one(id=booking_data.room_id)
-    # except RoomNotFoundException as ex:
-    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
-    # price = room.price
-    # _booking_data = BookingCreate(
-    #     price=price, user_id=user.id, **booking_data.model_dump()
-    # )
     try:
         result = await db.bookings.add(booking_data=booking_data, user_id=user.id, db=db)
     except RoomNotFoundException as ex:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=ex.detail
+            detail=ex.detail(booking_data.room_id)
         )
     except NoAvailableRoomsException:
         raise HTTPException(
@@ -84,23 +75,6 @@ async def update_booking(
     user: UserDep,
     booking_data: BookingUpdateRequest,
 ):
-    # booking = await db.bookings.get_one_or_none(id=booking_id)
-    # if not booking:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_404_NOT_FOUND,
-    #         detail="Бронирование с указанным id не найдено!"
-    #     )
-    # if booking_data.room_id:
-    #     room = await db.rooms.get_one_or_none(id=booking_data.room_id)
-    # else:
-    #     room = await db.rooms.get_one_or_none(id=booking.room_id)
-    # price = room.price
-    # _booking_data = BookingUpdate(
-    #     # price=price,
-    #     **booking_data.model_dump()
-    # )
-
-    # if booking.user_id == user.id:
     try:
         result = await db.bookings.change(
             booking_data=booking_data,
@@ -109,7 +83,7 @@ async def update_booking(
             db=db,
             user_id=user.id
         )
-    except RoomNotFoundException as ex:
+    except RoomForHotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
     except BookingNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)

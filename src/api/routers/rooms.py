@@ -3,7 +3,8 @@ from datetime import date, datetime, timedelta
 from fastapi import APIRouter, Body, Path, Query, status, HTTPException
 
 from src.api.dependencies import DBDep
-from src.api.exceptions import NotFoundException
+from src.exceptions import NotFoundException, DateToLaterThanDateFromException, \
+    HotelNotFoundException, RoomForHotelNotFoundException
 from src.repositories.utils.facilities import check_facilities_existence
 from src.schemas.facilities import RoomFacilityAddRequest
 from src.schemas.rooms import (
@@ -46,6 +47,8 @@ async def get_hotel_rooms(
         rooms = await db.rooms.get_rooms_by_date(
             hotel_id=hotel_id, date_from=date_from, date_to=date_to
         )
+    except DateToLaterThanDateFromException as ex:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ex.detail)
     except NotFoundException:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Нет свободных номеров')
     return rooms
@@ -64,6 +67,10 @@ async def create_room(
     ),
     db: DBDep,
 ):
+    try:
+        await db.hotels.get_one(id=hotel_id)
+    except HotelNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
     _room_data = RoomCreate(hotel_id=hotel_id, **room_data.model_dump())
     room: RoomInfo = await db.rooms.add(data=_room_data)
     if room_data.facility_ids:
@@ -83,7 +90,10 @@ async def create_room(
     summary=("Получение общей информации о всех типах номеров для " 'отеля "hotel_id"'),
 )
 async def get_hotel_room(hotel_id: int, room_id: int, db: DBDep):
-    room = await db.rooms.get_one_or_none(hotel_id=hotel_id, id=room_id)
+    try:
+        room = await db.rooms.get_one(hotel_id=hotel_id, room_id=room_id)
+    except RoomForHotelNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
     return room
 
 
@@ -155,7 +165,10 @@ async def get_rooms_by_date(
     summary=('Удаление типа номер по "room_id" для отеля "hotel_id"'),
 )
 async def remove_hotel_room(hotel_id: int, room_id: int, db: DBDep):
-    result = await db.rooms.remove(hotel_id=hotel_id, id=room_id)
+    try:
+        result = await db.rooms.remove(hotel_id=hotel_id, id=room_id)
+    except RoomNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
     await db.commit()
     return result
 
@@ -176,15 +189,18 @@ async def update_hotel_room(
     ),
     db: DBDep,
 ):
-    new_facility_ids = room_data.facility_ids
+    new_facility_ids = set(room_data.facility_ids)
     await check_facilities_existence(db=db, facility_ids=new_facility_ids)
     _room_data = RoomPut(hotel_id=hotel_id, **room_data.model_dump())
-    result = await db.rooms.change(
-        id=room_id, hotel_id=hotel_id, data=_room_data, exclude_unset=False
-    )
-    await db.room_facilities.room_facility_creator(
-        room_id=room_id, new_facility_ids=new_facility_ids
-    )
+    try:
+        result = await db.rooms.change(
+            id=room_id, hotel_id=hotel_id, data=_room_data, exclude_unset=False
+        )
+        await db.room_facilities.room_facility_creator(
+            room_id=room_id, new_facility_ids=new_facility_ids
+        )
+    except RoomForHotelNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
     await db.commit()
     return result
 
@@ -209,15 +225,21 @@ async def update_hotel_room_partially(
         hotel_id=hotel_id,
         **room_data.model_dump(exclude_unset=True, exclude="facility_ids"),
     )
-    new_facility_ids = room_data.facility_ids
-    await check_facilities_existence(db=db, facility_ids=new_facility_ids)
-    result = await db.rooms.change(
-        id=room_id, hotel_id=hotel_id, data=_room_data, exclude_unset=True
-    )
-    if new_facility_ids:
+    if room_data.facility_ids:
+        new_facility_ids = set(room_data.facility_ids)
+        await check_facilities_existence(db=db, facility_ids=new_facility_ids)
+    try:
+        result = await db.rooms.change(
+            id=room_id, hotel_id=hotel_id, data=_room_data, exclude_unset=True
+        )
+    except RoomForHotelNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
+    if room_data.facility_ids:
+        new_facility_ids = set(room_data.facility_ids)
+        await check_facilities_existence(db=db, facility_ids=new_facility_ids)
         if new_facility_ids:
             await db.room_facilities.room_facility_creator(
                 room_id=room_id, new_facility_ids=new_facility_ids
             )
-        await db.commit()
+    await db.commit()
     return result

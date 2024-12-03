@@ -1,9 +1,9 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Body, Query, status, HTTPException
 
 from src.api.dependencies import DBDep, PaginationDep
-from src.api.exceptions import NotFoundException
+from src.exceptions import DateToLaterThanDateFromException, HotelNotFoundException
 from src.schemas.hotels import (
     HotelAddRequest,
     HotelPatch,
@@ -34,20 +34,18 @@ async def get_hotels(
     title: str | None = Query(default=None, description="Название отеля"),
     location: str | None = Query(default=None, description="Расположение"),
 ) -> list[HotelResponse] | str | None:
-    # try:
-    #     date_to = datetime.strptime(date_to, "%d.%m.%Y").date()
-    #     date_from = datetime.strptime(date_from, "%d.%m.%Y").date()
-    # except ValueError:
-    #     return "Укажите даты в формате dd.mm.yyyy"
     per_page = pagination.per_page or 3
-    result = await db.hotels.get_filtered_hotels(
-        date_to=date_to,
-        date_from=date_from,
-        title=title,
-        location=location,
-        limit=per_page,
-        offset=per_page * (pagination.page - 1),
-    )
+    try:
+        result = await db.hotels.get_filtered_hotels(
+            date_to=date_to,
+            date_from=date_from,
+            title=title,
+            location=location,
+            limit=per_page,
+            offset=per_page * (pagination.page - 1),
+        )
+    except DateToLaterThanDateFromException as ex:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ex.detail)
     return result
 
 
@@ -55,8 +53,8 @@ async def get_hotels(
 async def get_hotel(hotel_id: int, db: DBDep):
     try:
         return await db.hotels.get_one(id=hotel_id)
-    except NotFoundException:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Отель не найден')
+    except HotelNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id))
 
 
 @hotels_router.delete(

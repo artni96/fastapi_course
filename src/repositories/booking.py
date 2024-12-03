@@ -1,13 +1,9 @@
 from datetime import datetime
 
-from fastapi import HTTPException, status
 from sqlalchemy import insert, select, update, func
-from sqlalchemy.exc import NoResultFound
 
-from src.api.exceptions import NoAvailableRoomsException, NotFoundException, RoomNotFoundException, \
-    OnlyForAuthorException, BookingNotFoundException, DateToLaterThanDateFromException, \
+from src.exceptions import NoAvailableRoomsException, OnlyForAuthorException, BookingNotFoundException, DateToLaterThanDateFromException, \
     DateToLaterThanCurrentTimeException
-from src.constants import DATE_FORMAT
 from src.models import RoomsModel
 from src.models.booking import BookingModel
 from src.repositories.base import BaseRepository
@@ -33,7 +29,7 @@ class BookingRepository(BaseRepository):
         ]
 
     async def add(self, booking_data: BookingCreateRequest, db, user_id: int):
-        room = await db.rooms.get_one(id=booking_data.room_id)
+        room = await check_room_existence(room_id=booking_data.room_id, db=db)
         price = room.price
         _booking_data = BookingCreate(
             price=price, user_id=user_id, **booking_data.model_dump()

@@ -1,8 +1,10 @@
 from datetime import date
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import load_only
 
+from src.exceptions import NotFoundException, RoomNotFoundException
 from src.models.booking import BookingModel
 from src.models.rooms import RoomsModel
 
@@ -170,8 +172,11 @@ def extended_rooms_response(
     return result
 
 
-async def check_room_existence(room_id, session):
-    query = select(RoomsModel).where(RoomsModel.id == room_id)
-    room = await session.execute(query)
-    result = room.scalars().one()
-    return result
+async def check_room_existence(room_id, db):
+    try:
+        query = select(RoomsModel).where(RoomsModel.id == room_id)
+        room = await db.session.execute(query)
+        return room.scalars().one()
+    except NoResultFound:
+        raise RoomNotFoundException
+

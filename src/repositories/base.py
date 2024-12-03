@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import NoResultFound
 
-from src.api.exceptions import NotFoundException
+from src.exceptions import NotFoundException
 from src.repositories.mappers.base import DataMapper
 
 
@@ -69,12 +69,16 @@ class BaseRepository:
         try:
             model_obj = result.scalars().one()
             return self.mapper.map_to_domain_entity(model_obj)
-        except NoResultFound:
-            return {"status": "NOT FOUND"}
+        except NoResultFound as ex:
+            # return {"status": "NOT FOUND"}
+            if  f'Ключ (room_id)=({data.roo}) отсутствует в таблице "roomsmodel"' in ex.__cause__:
+                raise RoomNotFoundException
+            print(ex.__cause__)
 
     async def remove(self, **filtered_by) -> dict:
         query = delete(self.model).filter_by(**filtered_by)
         result = await self.session.execute(query)
         if result.rowcount == 1:
             return {"status": "OK"}
-        return {"status": "object has not been found"}
+        raise self.exception
+        # return {"status": "object has not been found"}

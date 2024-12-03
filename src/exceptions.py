@@ -13,8 +13,24 @@ class NoAvailableRoomsException(ProjectException):
     detail = 'Нет свободных номеров'
 
 
+class HotelNotFoundException(BaseException):
+    @staticmethod
+    def detail(hotel_id):
+        return f'Отель с id {hotel_id} не найден'
+
+class RoomForHotelNotFoundException(BaseException):
+
+    @staticmethod
+    def detail(hotel_id, room_id):
+        detail = f'Номер {room_id} в отеле {hotel_id} не найден'
+        return detail
+
+
 class RoomNotFoundException(BaseException):
-    detail = 'Номер с указанным id не найден'
+
+    @staticmethod
+    def detail( room_id):
+        return f'Номер {room_id} не найден'
 
 
 class BookingNotFoundException(BaseException):
@@ -26,8 +42,8 @@ class OnlyForAuthorException(BaseException):
 
 
 class DateToLaterThanDateFromException(BaseException):
-    detail = 'Дата начала бронирования не может быть позже даты конца бронирования'
+    detail = 'Дата date_to не может быть позже даты date_from'
 
 
 class DateToLaterThanCurrentTimeException(BaseException):
-    detail = 'Дата бронирования не может быть раньше текущего времени'
+    detail = 'Дата date_from не может быть раньше текущего времени'

@@ -1,10 +1,10 @@
 from datetime import date
 
-from sqlalchemy import select
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy import select, update
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.orm import joinedload, selectinload
 
-from src.api.exceptions import NotFoundException, RoomNotFoundException
+from src.exceptions import DateToLaterThanDateFromException, RoomForHotelNotFoundException
 from src.models.rooms import RoomsModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import (
@@ -16,17 +16,18 @@ from src.repositories.utils.rooms import (
     extended_rooms_response,
     rooms_ids_for_booking,
 )
-from src.schemas.rooms import RoomExtendedResponse
+from src.schemas.rooms import RoomExtendedResponse, RoomCreate, RoomPut
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsModel
     mapper = RoomDataMapper
-    exception = RoomNotFoundException
+    exception = RoomForHotelNotFoundException
 
     async def get_rooms_by_date(self, date_from: date, date_to: date, hotel_id: int):
         rooms_ids_to_get = rooms_ids_for_booking(date_from, date_to, hotel_id)
-
+        if date_from >= date_to:
+            raise  DateToLaterThanDateFromException
         query = (
             select(self.model)
             .options(selectinload(self.model.facilities))
@@ -50,6 +51,18 @@ class RoomsRepository(BaseRepository):
         if model_obj:
             return RoomDataWithFacilitiesMapper.map_to_domain_entity(model_obj)
 
+    async def get_one(self, **filter_by):
+        query = (
+            select(self.model)
+            .options(joinedload(self.model.facilities))
+            .filter_by(**filter_by)
+        )
+        result = await self.session.execute(query)
+        try:
+            model_obj = result.unique().scalars().one()
+        except NoResultFound:
+            raise RoomForHotelNotFoundException
+        return RoomDataWithFacilitiesMapper.map_to_domain_entity(model_obj)
 
     async def extended_room_response(
         self, date_from: date, date_to: date, room_id: int, hotel_id: int
@@ -85,6 +98,28 @@ class RoomsRepository(BaseRepository):
             facilities=mapped_room_facilities_objs.facilities,
         )
         return result
+
+    async def change(self, data: RoomPut, id: int, hotel_id: int, exclude_unset: bool = False):
+        query = (
+            update(self.model)
+            .filter_by(id=id, hotel_id=hotel_id)
+            .values(**data.model_dump(exclude_unset=exclude_unset))
+            .returning(self.model)
+        )
+        result = await self.session.execute(query)
+        try:
+            model_obj = result.scalars().one()
+            return self.mapper.map_to_domain_entity(model_obj)
+        except NoResultFound as ex:
+            # return {"status": "NOT FOUND"}
+            raise RoomForHotelNotFoundException
+        #     # print(ex.__cause__)
+        #     print(456)
+        # except IntegrityError as ex:
+        #     if  f'Ключ (room_id)=({id}) отсутствует в таблице "roomsmodel"' in str(ex.__cause__):
+        #         raise RoomNotFoundException
+        #     print(ex.__cause__)
+        #     print(123)
 
     async def extended_rooms_response_manager(
         self, date_from: date, date_to: date, hotel_id: int

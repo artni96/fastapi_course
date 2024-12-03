@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import NoResultFound
 
+from src.exceptions import DateToLaterThanDateFromException, HotelNotFoundException
 from src.constants import IMAGE_PATH
 from src.models.hotels import HotelsModel
 from src.models.images import ImagesModel
@@ -20,6 +21,7 @@ from src.tasks.tasks import resize_image
 class HotelsRepository(BaseRepository):
     model = HotelsModel
     mapper = HotelDataMapper
+    exception = HotelNotFoundException
 
     def filtered_query(self, query, location=None, title=None, id=None):
         if id is not None:
@@ -39,6 +41,8 @@ class HotelsRepository(BaseRepository):
         offset: int,
         limit: int,
     ):
+        if date_from >= date_to:
+            raise DateToLaterThanDateFromException
         rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotels_ids_to_get = (
             select(RoomsModel.hotel_id)
