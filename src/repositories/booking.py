@@ -13,7 +13,8 @@ from src.models.booking import BookingModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingDataMapper
 from src.repositories.utils.rooms import check_room_existence
-from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate, BookingUpdateRequest
+from src.schemas.booking import BookingCreate, BookingResponse, BookingUpdate, BookingUpdateRequest, \
+    BookingCreateRequest
 
 
 class BookingRepository(BaseRepository):
@@ -31,7 +32,7 @@ class BookingRepository(BaseRepository):
             self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()
         ]
 
-    async def add(self, booking_data: BookingCreate, db, user_id: int):
+    async def add(self, booking_data: BookingCreateRequest, db, user_id: int):
         room = await db.rooms.get_one(id=booking_data.room_id)
         price = room.price
         _booking_data = BookingCreate(
@@ -61,8 +62,7 @@ class BookingRepository(BaseRepository):
         if check_avaliable_rooms_amount is not None:
             if check_avaliable_rooms_amount <= 0:
                 raise NoAvailableRoomsException()
-        else:
-            raise NoAvailableRoomsException()
+
 
         new_booking_stmt = (
             insert(self.model).values(**_booking_data.model_dump()).returning(self.model)
