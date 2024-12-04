@@ -12,6 +12,7 @@ from fastapi.openapi.docs import (
 )
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
+import logging
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -24,13 +25,15 @@ from src.config import settings  # noqa
 from src.init import redis_manager  # noqa
 
 
+logging.basicConfig(level=logging.INFO)
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await redis_manager.connect()
     FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
+    logging.info('Успешное подключение к Redis')
     yield
     await redis_manager.close()
-
 
 app = FastAPI(docs_url=None, redoc_url=None, debug=True, lifespan=lifespan)
 app.include_router(hotels_router)

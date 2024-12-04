@@ -1,7 +1,7 @@
 from datetime import date
 
 from sqlalchemy import select, update
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import joinedload, selectinload
 
 from src.exceptions import DateToLaterThanDateFromException, RoomForHotelNotFoundException
@@ -16,7 +16,7 @@ from src.repositories.utils.rooms import (
     extended_rooms_response,
     rooms_ids_for_booking,
 )
-from src.schemas.rooms import RoomExtendedResponse, RoomCreate, RoomPut
+from src.schemas.rooms import RoomExtendedResponse, RoomPut
 
 
 class RoomsRepository(BaseRepository):
@@ -111,15 +111,8 @@ class RoomsRepository(BaseRepository):
             model_obj = result.scalars().one()
             return self.mapper.map_to_domain_entity(model_obj)
         except NoResultFound as ex:
-            # return {"status": "NOT FOUND"}
             raise RoomForHotelNotFoundException
-        #     # print(ex.__cause__)
-        #     print(456)
-        # except IntegrityError as ex:
-        #     if  f'Ключ (room_id)=({id}) отсутствует в таблице "roomsmodel"' in str(ex.__cause__):
-        #         raise RoomNotFoundException
-        #     print(ex.__cause__)
-        #     print(123)
+
 
     async def extended_rooms_response_manager(
         self, date_from: date, date_to: date, hotel_id: int

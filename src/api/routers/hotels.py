@@ -10,6 +10,7 @@ from src.schemas.hotels import (
     HotelPutRequest,
     HotelResponse,
 )
+from src.services.hotels import HotelService
 
 hotels_router = APIRouter(
     prefix="/hotels",
@@ -33,16 +34,14 @@ async def get_hotels(
     ),
     title: str | None = Query(default=None, description="Название отеля"),
     location: str | None = Query(default=None, description="Расположение"),
-) -> list[HotelResponse] | str | None:
-    per_page = pagination.per_page or 3
+):
     try:
-        result = await db.hotels.get_filtered_hotels(
-            date_to=date_to,
+        result = await HotelService(db).get_hotels(
+            pagination=pagination,
             date_from=date_from,
+            date_to=date_to,
             title=title,
-            location=location,
-            limit=per_page,
-            offset=per_page * (pagination.page - 1),
+            location=location
         )
     except DateToLaterThanDateFromException as ex:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ex.detail)
@@ -52,7 +51,7 @@ async def get_hotels(
 @hotels_router.get("/{hotel_id}", summary='Получение информации об отеле по "hotel_id"')
 async def get_hotel(hotel_id: int, db: DBDep):
     try:
-        return await db.hotels.get_one(id=hotel_id)
+        return await HotelService(db).get_hotel(hotel_id=hotel_id)
     except HotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id))
 
@@ -63,9 +62,7 @@ async def get_hotel(hotel_id: int, db: DBDep):
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_hotel(hotel_id: int, db: DBDep):
-    result = await db.hotels.remove(id=hotel_id)
-    await db.commit()
-    return result
+    return await HotelService(db).delete_hotel(hotel_id=hotel_id)
 
 
 @hotels_router.post(
@@ -78,8 +75,7 @@ async def post_hotel(
     ),
     db: DBDep,
 ):
-    new_hotel = await db.hotels.add(data=hotel_data, db=db)
-    await db.commit()
+    new_hotel = await HotelService(db).post_hotel(hotel_data=hotel_data)
 
     return {"status": "OK", "data": new_hotel}
 
@@ -90,9 +86,7 @@ async def post_hotel(
 async def update_hotel(
     hotel_id: int, hotel_data: HotelPutRequest, db: DBDep
 ) -> HotelResponse:
-    result = await db.hotels.change(id=hotel_id, data=hotel_data, db=db)
-    await db.commit()
-    return result
+    return await HotelService(db).update_hotel(hotel_id=hotel_id, hotel_data=hotel_data)
 
 
 @hotels_router.patch(
@@ -101,8 +95,4 @@ async def update_hotel(
 async def update_hotel_partially(
     hotel_id: int, hotel_data: HotelPatch, db: DBDep
 ) -> HotelResponse:
-    result = await db.hotels.change(
-        id=hotel_id, exclude_unset=True, data=hotel_data, db=db
-    )
-    await db.commit()
-    return result
+    return await HotelService(db).update_hotel_partially(hotel_id=hotel_id, hotel_data=hotel_data)
