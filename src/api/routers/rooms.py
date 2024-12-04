@@ -1,21 +1,17 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Body, Path, Query, status, HTTPException
 
 from src.api.dependencies import DBDep
 from src.exceptions import NotFoundException, DateToLaterThanDateFromException, \
     HotelNotFoundException, RoomForHotelNotFoundException
-from src.repositories.utils.facilities import check_facilities_existence
-from src.schemas.facilities import RoomFacilityAddRequest
 from src.schemas.rooms import (
-    RoomCreate,
     RoomCreateRequest,
-    RoomInfo,
     RoomPatch,
     RoomPatchRequest,
-    RoomPut,
     RoomPutRequest,
 )
+from src.services.rooms import RoomService
 
 
 rooms_router = APIRouter(prefix="/hotels", tags=["Номера"])
@@ -44,11 +40,10 @@ async def get_hotel_rooms(
     ),
 ) -> list:
     try:
-        rooms = await db.rooms.get_rooms_by_date(
-            hotel_id=hotel_id, date_from=date_from, date_to=date_to
-        )
+        rooms = await RoomService(db).get_hotel_rooms(hotel_id, date_from, date_to)
     except DateToLaterThanDateFromException as ex:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ex.detail)
+
     except NotFoundException:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Нет свободных номеров')
     return rooms
@@ -68,21 +63,9 @@ async def create_room(
     db: DBDep,
 ):
     try:
-        await db.hotels.get_one(id=hotel_id)
+        return await RoomService(db).create_room(hotel_id, room_data)
     except HotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
-    _room_data = RoomCreate(hotel_id=hotel_id, **room_data.model_dump())
-    room: RoomInfo = await db.rooms.add(data=_room_data)
-    if room_data.facility_ids:
-        await check_facilities_existence(db=db, facility_ids=room_data.facility_ids)
-        facility_ids = [
-            RoomFacilityAddRequest(room_id=room.id, facility_id=facility_id)
-            for facility_id in room_data.facility_ids
-        ]
-        await db.room_facilities.add_bulk(data=facility_ids)
-
-    await db.commit()
-    return await db.rooms.get_one_or_none(id=room.id)
 
 
 @rooms_router.get(
@@ -91,44 +74,10 @@ async def create_room(
 )
 async def get_hotel_room(hotel_id: int, room_id: int, db: DBDep):
     try:
-        room = await db.rooms.get_one(hotel_id=hotel_id, room_id=room_id)
+        room = await RoomService(db).get_hotel_room(hotel_id, room_id)
     except RoomForHotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
     return room
-
-
-@rooms_router.get(
-    "/{hotel_id}/extended-rooms/",
-    summary=(
-        "Получение подробной информации о количестве свободных номеров"
-        ' отеля по "hotel_id" в указанный период'
-    ),
-)
-async def get_filtered_hotel_room_by_date(
-    *,
-    hotel_id: int,
-    date_from: date | str = Query(
-        examples=[
-            "18.10.2024",
-        ]
-    ),
-    date_to: date | str = Query(
-        examples=[
-            "21.10.2024",
-        ]
-    ),
-    db: DBDep,
-):
-    try:
-        date_to = datetime.strptime(date_to, "%d.%m.%Y").date()
-        date_from = datetime.strptime(date_from, "%d.%m.%Y").date()
-    except ValueError:
-        return "Укажите даты в формате dd.mm.yyyy"
-
-    result = await db.rooms.extended_rooms_response_manager(
-        date_from=date_from, date_to=date_to, hotel_id=hotel_id
-    )
-    return result
 
 
 @rooms_router.get(
@@ -140,36 +89,29 @@ async def get_filtered_hotel_room_by_date(
 )
 async def get_rooms_by_date(
     *,
-    date_from: date | str = Query(
-        examples=[
-            "18.10.2024",
-        ]
-    ),
-    date_to: date | str = Query(examples=["21.10.2024,"]),
+    date_from: date = Query(example=date.today() + timedelta(days=1)),
+    date_to: date = Query(example=date.today() + timedelta(days=2)),
     hotel_id: int,
     room_id: int,
     db: DBDep,
 ):
     try:
-        date_to = datetime.strptime(date_to, "%d.%m.%Y").date()
-        date_from = datetime.strptime(date_from, "%d.%m.%Y").date()
-    except ValueError:
-        return "Укажите даты в формате dd.mm.yyyy"
-    return await db.rooms.extended_room_response(
-        date_from=date_from, date_to=date_to, room_id=room_id, hotel_id=hotel_id
-    )
+        return await RoomService(db).get_rooms_with_ext_info_by_date(
+            date_from=date_from, date_to=date_to, room_id=room_id, hotel_id=hotel_id
+        )
+    except RoomForHotelNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
 
 
 @rooms_router.delete(
     "/{hotel_id}/rooms/{room_id}",
-    summary=('Удаление типа номер по "room_id" для отеля "hotel_id"'),
+    summary='Удаление типа номер по "room_id" для отеля "hotel_id"',
 )
 async def remove_hotel_room(hotel_id: int, room_id: int, db: DBDep):
     try:
-        result = await db.rooms.remove(hotel_id=hotel_id, id=room_id)
-    except RoomNotFoundException as ex:
+        result = await RoomService(db).remove_hotel_room(hotel_id, room_id)
+    except RoomForHotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
-    await db.commit()
     return result
 
 
@@ -189,21 +131,10 @@ async def update_hotel_room(
     ),
     db: DBDep,
 ):
-    new_facility_ids = set(room_data.facility_ids)
-    await check_facilities_existence(db=db, facility_ids=new_facility_ids)
-    _room_data = RoomPut(hotel_id=hotel_id, **room_data.model_dump())
     try:
-        result = await db.rooms.change(
-            id=room_id, hotel_id=hotel_id, data=_room_data, exclude_unset=False
-        )
-        await db.room_facilities.room_facility_creator(
-            room_id=room_id, new_facility_ids=new_facility_ids
-        )
+        return await RoomService(db).update_hotel_room(hotel_id, room_id, room_data)
     except RoomForHotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
-    await db.commit()
-    return result
-
 
 @rooms_router.patch(
     "/{hotel_id}/rooms/{room_id}",
@@ -225,21 +156,7 @@ async def update_hotel_room_partially(
         hotel_id=hotel_id,
         **room_data.model_dump(exclude_unset=True, exclude="facility_ids"),
     )
-    if room_data.facility_ids:
-        new_facility_ids = set(room_data.facility_ids)
-        await check_facilities_existence(db=db, facility_ids=new_facility_ids)
     try:
-        result = await db.rooms.change(
-            id=room_id, hotel_id=hotel_id, data=_room_data, exclude_unset=True
-        )
+        return await RoomService(db).update_hotel_room_partially(hotel_id, room_id, room_data)
     except RoomForHotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail(hotel_id, room_id))
-    if room_data.facility_ids:
-        new_facility_ids = set(room_data.facility_ids)
-        await check_facilities_existence(db=db, facility_ids=new_facility_ids)
-        if new_facility_ids:
-            await db.room_facilities.room_facility_creator(
-                room_id=room_id, new_facility_ids=new_facility_ids
-            )
-    await db.commit()
-    return result

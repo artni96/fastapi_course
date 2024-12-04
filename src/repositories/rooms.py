@@ -76,16 +76,17 @@ class RoomsRepository(BaseRepository):
             queries["booked_and_avaliable_rooms_info_table"]
         )
         rooms_facilities = await self.session.execute(queries["room_facilities"])
-        mapped_room_obj = booked_and_avaliable_rooms_info_table.mappings().one_or_none()
-        mapped_room_facilities_objs = rooms_facilities.scalars().one_or_none()
-        if not mapped_room_obj:
-            booked_rooms = 0
-            avaliable_rooms = mapped_room_facilities_objs.quantity
-        else:
-            booked_rooms = mapped_room_obj.booked_rooms
-            avaliable_rooms = mapped_room_obj.avaliable_rooms
-        if not mapped_room_facilities_objs:
-            return {"status": "Room with given room_id in the hotel has not found"}
+        try:
+            mapped_room_obj = booked_and_avaliable_rooms_info_table.mappings().one_or_none()
+            mapped_room_facilities_objs = rooms_facilities.scalar_one()
+            if not mapped_room_obj:
+                booked_rooms = 0
+                avaliable_rooms = mapped_room_facilities_objs.quantity
+            else:
+                booked_rooms = mapped_room_obj.booked_rooms
+                avaliable_rooms = mapped_room_obj.avaliable_rooms
+        except NoResultFound:
+            raise RoomForHotelNotFoundException
         result = RoomExtendedResponse(
             id=mapped_room_facilities_objs.id,
             hotel_id=mapped_room_facilities_objs.hotel_id,
@@ -112,49 +113,3 @@ class RoomsRepository(BaseRepository):
             return self.mapper.map_to_domain_entity(model_obj)
         except NoResultFound as ex:
             raise RoomForHotelNotFoundException
-
-
-    async def extended_rooms_response_manager(
-        self, date_from: date, date_to: date, hotel_id: int
-    ):
-        """Предоставление списка с подробной информацией о номерах отеля
-        hotel_id в указанный период."""
-        rooms_ids_to_get = rooms_ids_for_booking(
-            date_from=date_from, date_to=date_to, hotel_id=hotel_id
-        )
-        queries = extended_rooms_response(
-            date_from=date_from, date_to=date_to, rooms_id=rooms_ids_to_get
-        )
-        booked_and_avaliable_rooms_info_table = await self.session.execute(
-            queries["booked_and_avaliable_rooms_info_table"]
-        )
-        rooms_facilities = await self.session.execute(
-            queries["rooms_info_with_facilities"]
-        )
-        mapped_rooms_objs = booked_and_avaliable_rooms_info_table.mappings().all()
-        mapped_room_facilities_objs = rooms_facilities.scalars().all()
-        result = list()
-        for obj in mapped_room_facilities_objs:
-            for i in range(len(mapped_rooms_objs)):
-                current_obj = RoomExtendedResponse(
-                    id=obj.id,
-                    hotel_id=obj.hotel_id,
-                    title=obj.title,
-                    description=obj.description,
-                    price=obj.price,
-                    quantity=obj.quantity,
-                    facilities=obj.facilities,
-                )
-                if (
-                    len(mapped_rooms_objs) > 0
-                    and obj.id == mapped_rooms_objs[i].room_id
-                ):
-                    current_obj.booked_rooms = mapped_rooms_objs[i].booked_rooms
-                    current_obj.avaliable_rooms = mapped_rooms_objs[i].avaliable_rooms
-                    result.append(current_obj)
-                    mapped_rooms_objs.pop(i)
-                else:
-                    current_obj.booked_rooms = 0
-                    current_obj.avaliable_rooms = obj.quantity
-                    result.append(current_obj)
-        return result

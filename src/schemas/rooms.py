@@ -33,7 +33,7 @@ class RoomCreateRequest(BaseModel):
                     ),
                     "price": 3000,
                     "quantity": 10,
-                    "facility_ids": [3, 4],
+                    "facility_ids": [1, 2],
                 },
             },
             "Двуместный номер": {
@@ -44,7 +44,7 @@ class RoomCreateRequest(BaseModel):
                     "price": 4500,
                     "quantity": 7,
                     "facility_ids": [
-                        3,
+                        2,
                     ],
                 },
             },
@@ -104,7 +104,7 @@ class RoomPutRequest(RoomCreateRequest):
                     "description": "Новое описание номера",
                     "price": 2000,
                     "quantity": 7,
-                    "facility_ids": [3, 4],
+                    "facility_ids": [1, 2],
                 },
             }
         }

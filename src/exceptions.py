@@ -29,7 +29,7 @@ class RoomForHotelNotFoundException(BaseException):
 class RoomNotFoundException(BaseException):
 
     @staticmethod
-    def detail( room_id):
+    def detail(room_id):
         return f'Номер {room_id} не найден'
 
 

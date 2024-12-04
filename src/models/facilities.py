@@ -19,5 +19,5 @@ class FacilitiesMolel(Base):
 
 
 class RoomFacilitiesModel(Base):
-    room_id: Mapped[int] = mapped_column(ForeignKey("roomsmodel.id"))
-    facility_id: Mapped[int] = mapped_column(ForeignKey("facilitiesmolel.id"))
+    room_id: Mapped[int] = mapped_column(ForeignKey("roomsmodel.id", ondelete='cascade'))
+    facility_id: Mapped[int] = mapped_column(ForeignKey("facilitiesmolel.id", ondelete='cascade'))
