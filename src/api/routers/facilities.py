@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query, status, HTTPException
 from fastapi_cache.decorator import cache
 
 from src.api.dependencies import DBDep
+from src.exceptions import FacilityNotFoundException
 from src.schemas.facilities import FacilityBaseRequest, FacilityResponse
+from src.services.facility import FacilityService
 
 facilities_router = APIRouter(prefix="/facilities", tags=["Удобства"])
 
@@ -20,8 +22,10 @@ async def get_facility_by_id(
     facility_id: int,
     db: DBDep,
 ) -> FacilityResponse:
-    result = await db.facilities.get_one_or_none(id=facility_id)
-    return result
+    try:
+        return await FacilityService(db).get_facility_by_id(facility_id=facility_id)
+    except FacilityNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
 
 
 @facilities_router.post(

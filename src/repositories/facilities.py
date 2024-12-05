@@ -1,5 +1,6 @@
 from sqlalchemy import delete, insert, select
 
+from src.exceptions import FacilityNotFoundException
 from src.models.facilities import FacilitiesMolel, RoomFacilitiesModel
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import FacilityDataMapper
@@ -9,6 +10,7 @@ from src.schemas.facilities import RoomFacilityAddRequest
 class FacilitiesRepository(BaseRepository):
     model = FacilitiesMolel
     mapper = FacilityDataMapper
+    exception = FacilityNotFoundException
 
     async def get_filtered(self, title: str | None = None):
         query = select(self.model)

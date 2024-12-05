@@ -95,13 +95,7 @@ class HotelsRepository(BaseRepository):
                 image_name = image_name.scalars().one()
                 ImageManager().delete_file(file_name_with_ext=image_name)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Не удалось удалить отель",
-            )
-        if removed_hotel:
-            return {"status": "OK"}
-        return {"status": "Отель не существует"}
+            raise NoResultFound
 
     async def change(
         self, db, data: HotelPatch, exclude_unset: bool = False, **filtered_by

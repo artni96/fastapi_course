@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import insert, select, update, func
+from sqlalchemy import insert, select, update, func, desc, delete
+from sqlalchemy.exc import NoResultFound
 
 from src.exceptions import NoAvailableRoomsException, OnlyForAuthorException, BookingNotFoundException, DateToLaterThanDateFromException, \
     DateToLaterThanCurrentTimeException
@@ -17,18 +18,25 @@ class BookingRepository(BaseRepository):
     model = BookingModel
     schema = BookingResponse
     mapper = BookingDataMapper
+    exception = BookingNotFoundException
 
     async def get_all(self, offset=0, limit=3, user_id=None) -> list[BookingModel]:
         query = select(self.model)
         if user_id:
             query = query.filter_by(user_id=user_id)
-        query = query.offset(offset).limit(limit)
+        query = query.offset(offset).limit(limit).order_by(desc('created_at'))
         result = await self.session.execute(query)
         return [
             self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()
         ]
 
     async def add(self, booking_data: BookingCreateRequest, db, user_id: int):
+        date_from = booking_data.date_from
+        date_to = booking_data.date_to
+        if date_to <= date_from:
+            raise DateToLaterThanDateFromException
+        if date_from <= datetime.today().date():
+            raise DateToLaterThanCurrentTimeException
         room = await check_room_existence(room_id=booking_data.room_id, db=db)
         price = room.price
         _booking_data = BookingCreate(
@@ -76,11 +84,13 @@ class BookingRepository(BaseRepository):
             raise DateToLaterThanDateFromException
         if date_from <= datetime.today().date():
             raise DateToLaterThanCurrentTimeException
-        booking = await db.bookings.get_one_or_none(id=booking_id)
-        if not booking:
+        try:
+            booking = await db.bookings.get_one(id=booking_id)
+            if booking:
+                if booking.user_id != user_id:
+                    raise OnlyForAuthorException
+        except NoResultFound:
             raise BookingNotFoundException
-        if booking.user_id != user_id:
-            raise OnlyForAuthorException
         if booking_data.room_id:
             room = await db.rooms.get_one(id=booking_data.room_id)
         else:
@@ -104,3 +114,16 @@ class BookingRepository(BaseRepository):
         result = await self.session.execute(new_booking_stmt)
         model_obj = result.scalars().one()
         return self.mapper.map_to_domain_entity(model_obj)
+
+    async def remove(self, booking_id: int, user_id, db):
+        try:
+            booking = await db.bookings.get_one(id=booking_id)
+            if booking:
+                if booking.user_id != user_id:
+                    raise OnlyForAuthorException
+        except NoResultFound:
+            raise BookingNotFoundException
+        removed_booking_stmt = delete(self.model).filter_by(id=booking_id)
+        await self.session.execute(removed_booking_stmt)
+        await db.commit()
+        return {"detail": "Бронирование успешно удалено"}

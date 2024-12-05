@@ -18,6 +18,11 @@ class HotelNotFoundException(BaseException):
     def detail(hotel_id):
         return f'Отель с id {hotel_id} не найден'
 
+
+class FacilityNotFoundException(BaseException):
+    detail = 'Удобство с указанным id не найдено'
+
+
 class RoomForHotelNotFoundException(BaseException):
 
     @staticmethod
