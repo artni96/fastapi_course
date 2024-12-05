@@ -70,13 +70,13 @@ class BaseRepository:
             model_obj = result.scalars().one()
             return self.mapper.map_to_domain_entity(model_obj)
         except NoResultFound as ex:
-            if  f'Ключ (room_id)=({data.roo}) отсутствует в таблице "roomsmodel"' in ex.__cause__:
-                raise RoomNotFoundException
-            print(ex.__cause__)
+            raise self.exception
 
     async def remove(self, **filtered_by) -> dict:
-        query = delete(self.model).filter_by(**filtered_by)
+        query = delete(self.model).filter_by(**filtered_by).returning(self.model)
         result = await self.session.execute(query)
-        if result.rowcount == 1:
+        try:
+            result.scalar_one()
             return {"status": "OK"}
-        raise self.exception
+        except NoResultFound:
+            raise self.exception

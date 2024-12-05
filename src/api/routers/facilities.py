@@ -14,7 +14,7 @@ facilities_router = APIRouter(prefix="/facilities", tags=["Удобства"])
 async def get_all_facilities(
     db: DBDep, title: str | None = Query(default=None, max_length=64)
 ) -> list[FacilityResponse]:
-    return await db.facilities.get_filtered(title=title)
+    return await FacilityService(db).get_all_facilities(title=title)
 
 
 @facilities_router.get("/{facility_id}", summary='Получение удобства по "facility_id"')
@@ -34,10 +34,7 @@ async def get_facility_by_id(
 async def create_facility(
     db: DBDep, facility_data: FacilityBaseRequest
 ) -> FacilityResponse:
-    new_facility = await db.facilities.add(facility_data)
-    await db.commit()
-    return new_facility
-
+    return await FacilityService(db).create_facility(facility_data)
 
 @facilities_router.put(
     "/{facility_id}", summary='Обновление данных удобства по "facility_id"'
@@ -45,15 +42,17 @@ async def create_facility(
 async def update_facility(
     facility_id: int, db: DBDep, facility_data: FacilityBaseRequest
 ) -> FacilityResponse:
-    updated_facility = await db.facilities.change(id=facility_id, data=facility_data)
-    await db.commit()
-    return updated_facility
+    try:
+        return await FacilityService(db).update_facility(facility_id, facility_data)
+    except FacilityNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
 
 
 @facilities_router.delete(
     "/{facility_id}", summary='Удаление удобства по "facility_id"'
 )
 async def delete_facility(facility_id: int, db: DBDep) -> dict:
-    result = await db.facilities.remove(id=facility_id)
-    await db.commit()
-    return result
+    try:
+        return await FacilityService(db).delete_facility(facility_id)
+    except FacilityNotFoundException as ex:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex.detail)
