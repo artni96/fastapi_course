@@ -1,4 +1,3 @@
-from src.exceptions import FacilityNotFoundException
 from src.schemas.facilities import FacilityResponse, FacilityBaseRequest
 from src.services.base import BaseService
 

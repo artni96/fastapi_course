@@ -89,8 +89,8 @@ async def get_hotel_room(hotel_id: int, room_id: int, db: DBDep):
 )
 async def get_rooms_by_date(
     *,
-    date_from: date = Query(example=date.today() + timedelta(days=1)),
-    date_to: date = Query(example=date.today() + timedelta(days=2)),
+    date_from: date = Query(examples=[date.today() + timedelta(days=1)]),
+    date_to: date = Query(examples=[date.today() + timedelta(days=2)]),
     hotel_id: int,
     room_id: int,
     db: DBDep,

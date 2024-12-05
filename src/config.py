@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_USER_PASSWORD: str
     SECRET_KEY: str
-    ALGORTIHM: str
+    ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REDIS_HOST: str
     REDIS_PORT: int

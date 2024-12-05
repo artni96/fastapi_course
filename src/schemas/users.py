@@ -17,17 +17,17 @@ class UserRequestAdd(BaseModel):
     password: str = Field(max_length=64)
     first_name: str | None = Field(default=None, max_length=64)
     last_name: str | None = Field(default=None, max_length=128)
-    role: str = Field(default="Пользователь")
-
-    @field_validator("role")
-    def validate_role(cls, value: str):
-        role_list = ("Админ", "Модератор", "Пользователь")
-
-        if value.capitalize() not in role_list:
-            raise ValueError(
-                f"Пожалуйста, выберите одну из предложенных ролей: {role_list}"
-            )
-        return value.capitalize()
+    # role: str = Field(default="Пользователь")
+    #
+    # @field_validator("role")
+    # def validate_role(cls, value: str):
+    #     role_list = ("Админ", "Модератор", "Пользователь")
+    #
+    #     if value.capitalize() not in role_list:
+    #         raise ValueError(
+    #             f"Пожалуйста, выберите одну из предложенных ролей: {role_list}"
+    #         )
+    #     return value.capitalize()
 
     @model_validator(mode="after")
     def using_different_languages(cls, values):
@@ -47,7 +47,7 @@ class UserAdd(BaseModel):
     hashed_password: str = Field(max_length=64)
     first_name: str | None = Field(default=None, max_length=64)
     last_name: str | None = Field(default=None, max_length=128)
-    role: str = Field(default="Пользователь")
+    # role: str = Field(default="Пользователь")
 
 
 class User(BaseModel):
@@ -61,9 +61,9 @@ class User(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserJwt(BaseModel):
-    email: EmailStr
-    password: str
+# class UserJwtCreate(BaseModel):
+#     email: EmailStr
+#     password: str
 
 
 class UserJwtWithHashedPassword(User):
@@ -86,3 +86,17 @@ class UserUpdate(schemas.BaseUserUpdate):
     username: str = Field(max_length=64)
     first_name: str | None = Field(default=None, max_length=64)
     last_name: str | None = Field(default=None, max_length=128)
+
+class UserLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserWithHashedPassword(BaseModel):
+    id: int
+    email: EmailStr
+    hashed_password: str
+    model_config = ConfigDict(from_attributes=True)
+
+class UserForJWT(User):
+    is_superuser: bool

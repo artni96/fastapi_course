@@ -13,7 +13,7 @@ booking_router = APIRouter(prefix="/bookings", tags=["Бронирование �
 
 
 @booking_router.get("", summary="Получение информации всех бронированиях")
-async def get_all_bookings(db: DBDep, user: UserDep, pagination: PaginationDep):
+async def get_all_bookings(db: DBDep, user_id: UserDep, pagination: PaginationDep):
     bookings = await BookingService(db).get_all_bookings(pagination)
     return bookings
 
@@ -26,8 +26,11 @@ async def get_all_bookings(db: DBDep, user: UserDep, pagination: PaginationDep):
     ),
 )
 async def get_my_bookings(db: DBDep, user: UserDep, pagination: PaginationDep):
-    bookings = await BookingService(db).get_my_bookings(user, pagination)
-    return bookings
+    try:
+        bookings = await BookingService(db).get_my_bookings(user, pagination)
+        return bookings
+    except Exception:
+        raise HTTPException(status_code=500)
 
 
 @booking_router.post(
@@ -41,10 +44,11 @@ async def create_booking(
         openapi_examples=BookingCreateRequest.model_config["json_schema_extra"]
     ),
     db: DBDep,
-    user: UserDep,
+    user_id: UserDep,
 ):
     try:
-        result = await db.bookings.add(booking_data=booking_data, user_id=user.id, db=db)
+        # result = await db.bookings.add(booking_data=booking_data, user_id=user, db=db)
+        result = await BookingService(db).create_booking(booking_data, user_id)
     except RoomNotFoundException as ex:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -67,11 +71,11 @@ async def create_booking(
 async def update_booking(
     booking_id: int,
     db: DBDep,
-    user: UserDep,
+    user_id: UserDep,
     booking_data: BookingUpdateRequest,
 ):
     try:
-        result = await BookingService(db).update_booking(booking_id, user, booking_data)
+        result = await BookingService(db).update_booking(booking_id, user_id, booking_data)
     except RoomForHotelNotFoundException as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Номер не найден')
     except BookingNotFoundException as ex:

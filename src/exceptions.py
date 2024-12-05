@@ -52,3 +52,31 @@ class DateToLaterThanDateFromException(BaseException):
 
 class DateToLaterThanCurrentTimeException(BaseException):
     detail = 'Дата date_from не может быть раньше текущего времени'
+
+
+class ObjectAlreadyExistsException(ProjectException):
+    detail = "Похожий объект уже существует"
+
+
+class AllRoomsAreBookedException(ProjectException):
+    detail = "Не осталось свободных номеров"
+
+
+class IncorrectTokenException(ProjectException):
+    detail = "Некорректный токен"
+
+
+class EmailNotRegisteredException(ProjectException):
+    detail = "Пользователь с таким email не зарегистрирован"
+
+
+class IncorrectPasswordException(ProjectException):
+    detail = "Неверный пароль"
+
+
+class UserAlreadyExistsException(ProjectException):
+    detail = "Пользователь уже существует"
+
+
+class UserNotFoundException(ProjectException):
+    detail = 'Пользователь не найден'
