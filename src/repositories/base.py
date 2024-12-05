@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
-from src.exceptions import NotFoundException, RoomNotFoundException
+from src.exceptions import NotFoundException, RoomNotFoundException, ObjectAlreadyExistsException
 from src.repositories.mappers.base import DataMapper
 
 
@@ -49,8 +49,12 @@ class BaseRepository:
         new_data_stmt = (
             insert(self.model).values(**data.model_dump()).returning(self.model)
         )
-        result = await self.session.execute(new_data_stmt)
-        new_model_obj = result.unique().scalars().one()
+
+        try:
+            result = await self.session.execute(new_data_stmt)
+            new_model_obj = result.unique().scalars().one()
+        except IntegrityError:
+            raise ObjectAlreadyExistsException
         return self.mapper.map_to_domain_entity(new_model_obj)
 
     async def add_bulk(self, data: list[BaseModel]):

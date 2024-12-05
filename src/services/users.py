@@ -135,8 +135,8 @@ class AuthService(BaseService):
         access_token = await self.create_access_token({"user_id": user.id})
         return access_token
 
-    async def get_one_or_none_user(self, user_id: int):
-        return await self.db.users.get_one_or_none(id=user_id)
+    async def get_one_or_none_user(self, user):
+        return await self.db.users.get_one_or_none(id=user.id)
 
     async def get_one_with_role(self, user_id: int):
         return await self.db.users.get_user_info_for_jwt_token(user_id)
