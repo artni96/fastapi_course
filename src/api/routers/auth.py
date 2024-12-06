@@ -25,7 +25,6 @@ async def register_user(
         return await AuthService(db).register_user(data)
     except UserAlreadyExistsException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователь уже зарегистрирован')
-    # return {"status": "OK"}
 
 
 @user_router.post(

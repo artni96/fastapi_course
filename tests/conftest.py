@@ -84,14 +84,11 @@ async def add_new_user(ac, setup_database):
 async def auth_ac(add_new_user, ac):
     jwt_token = await ac.post(
         "/users/login",
-        data={
-            "username": "test_user_1@ya.net",
+        json={
+            "email": "test_user_1@ya.net",
             "password": "string",
         },
     )
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-        # headers={"Authorization": f'Bearer {jwt_token.json()["access_token"]}'},
-    ) as auth_ac:
-        yield auth_ac
+    assert ac.cookies['access_token']
+    yield ac
+

@@ -8,7 +8,7 @@ from pydantic import (
     model_validator,
     EmailStr,
 )
-from fastapi_users import schemas
+# from fastapi_users import schemas
 
 
 class UserRequestAdd(BaseModel):
@@ -68,24 +68,24 @@ class User(BaseModel):
 
 class UserJwtWithHashedPassword(User):
     hashed_password: str
-
-
-class UserRead(schemas.BaseUser[int]):
-    username: str = Field(max_length=64)
-    first_name: str | None = Field(default=None, max_length=64)
-    last_name: str | None = Field(default=None, max_length=128)
-
-
-class UserCreate(schemas.BaseUserCreate):
-    username: str = Field(max_length=64)
-    first_name: str | None = Field(default=None, max_length=64)
-    last_name: str | None = Field(default=None, max_length=128)
-
-
-class UserUpdate(schemas.BaseUserUpdate):
-    username: str = Field(max_length=64)
-    first_name: str | None = Field(default=None, max_length=64)
-    last_name: str | None = Field(default=None, max_length=128)
+#
+#
+# class UserRead(schemas.BaseUser[int]):
+#     username: str = Field(max_length=64)
+#     first_name: str | None = Field(default=None, max_length=64)
+#     last_name: str | None = Field(default=None, max_length=128)
+#
+#
+# class UserCreate(schemas.BaseUserCreate):
+#     username: str = Field(max_length=64)
+#     first_name: str | None = Field(default=None, max_length=64)
+#     last_name: str | None = Field(default=None, max_length=128)
+#
+#
+# class UserUpdate(schemas.BaseUserUpdate):
+#     username: str = Field(max_length=64)
+#     first_name: str | None = Field(default=None, max_length=64)
+#     last_name: str | None = Field(default=None, max_length=128)
 
 class UserLoginRequest(BaseModel):
     email: EmailStr
