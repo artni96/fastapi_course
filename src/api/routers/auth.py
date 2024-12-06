@@ -14,17 +14,18 @@ user_router = APIRouter(tags=['Пользователи',], prefix='/users')
 
 @user_router.post(
     "/register",
-    summary='Создание нового пользователя'
+    summary='Создание нового пользователя',
+    status_code=status.HTTP_201_CREATED
 )
 async def register_user(
     data: UserRequestAdd,
     db: DBDep,
 ):
     try:
-        await AuthService(db).register_user(data)
+        return await AuthService(db).register_user(data)
     except UserAlreadyExistsException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователь уже зарегистрирован')
-    return {"status": "OK"}
+    # return {"status": "OK"}
 
 
 @user_router.post(
@@ -57,7 +58,8 @@ async def get_me(
 
 @user_router.post(
     "/logout",
-    summary='Выход пользователя из системы'
+    summary='Выход пользователя из системы',
+    status_code=status.HTTP_204_NO_CONTENT
 )
 async def logout(response: Response):
     response.delete_cookie("access_token")

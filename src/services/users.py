@@ -121,8 +121,9 @@ class AuthService(BaseService):
         hashed_password = self.hash_password(data.password)
         new_user_data = UserAdd(hashed_password=hashed_password, **data.model_dump())
         try:
-            await self.db.users.add(new_user_data)
+            new_user = await self.db.users.add(new_user_data)
             await self.db.commit()
+            return new_user
         except ObjectAlreadyExistsException as ex:
             raise UserAlreadyExistsException from ex
 
