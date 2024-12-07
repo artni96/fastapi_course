@@ -8,7 +8,6 @@ from src.db import async_session_maker
 from src.exceptions import IncorrectTokenException
 from src.models.users import User
 from src.schemas.users import UserForJWT
-# from src.services.users import current_user
 from src.utils.db_manager import DBManager
 
 
