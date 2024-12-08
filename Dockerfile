@@ -8,4 +8,4 @@ RUN poetry config virtualenvs.create false
 RUN poetry install --no-interaction --no-ansi
 
 COPY . .
-CMD python src/main.py
+CMD alembic downgrade base; alembic upgrade head; python src/main.py
