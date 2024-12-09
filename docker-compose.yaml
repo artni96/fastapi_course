@@ -39,6 +39,7 @@ services:
       - '80:80'
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_value:/var/html/static/
     depends_on:
       - web
     networks:
@@ -52,10 +53,10 @@ services:
     networks:
       - booking_network
 
-
 networks:
   booking_network:
     external: true
 
 volumes:
   pg-booking-data:
+  static_value:
