@@ -6,7 +6,7 @@ services:
     image: postgres:16
 
     ports:
-      - '6432:5432'
+      - '5432:5432'
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -24,7 +24,7 @@ services:
       context: ./
       dockerfile: Dockerfile
     ports:
-      - "7777:8000"
+      - "8000:8000"
     restart: always
 
     depends_on:
@@ -38,7 +38,7 @@ services:
     container_name: 'booking_cache'
     image: redis:7.4
     ports:
-      - '7379:6379'
+      - '6379:6379'
     networks:
       - booking_network
 
