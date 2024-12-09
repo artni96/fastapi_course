@@ -22,3 +22,8 @@ docker run --name booking_backend \
     
 
 docker build -t booking_image .
+
+docker run --name booking_nginx \
+    --volume ./nginx.conf:/etc/nginx/nginx.conf \
+    --network=booking_network \
+    --rm -p 80:80 nginx
