@@ -39,7 +39,8 @@ async def login_user(
     try:
         access_token = await AuthService(db).login_user(data)
     except EmailNotRegisteredException:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователь с указанной не зарегистрирован')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователь с указанной  почтой не '
+                                                                            'зарегистрирован')
     except IncorrectPasswordException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный пароль')
 
